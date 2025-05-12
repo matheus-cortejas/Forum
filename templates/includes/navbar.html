@@ -1,0 +1,58 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+<header>
+    <div class="navbar">
+        <a href="/" class="brand">
+            <img src="{% static 'img/logo.png' %}" alt="Logo">
+        </a>
+        <div class="navigation">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="{% url 'home' %}">Fóruns</a>
+                    <button type="button" class="dropdown-toggle js-menuTrigger" aria-expanded="false">▼</button>
+                    <div class="dropdown-menu menu--structural" data-menu="menu" aria-hidden="true">
+                        <span class="menu-arrow"></span>
+                        <div class="menu-content">
+                            <a href="#" class="menu-linkRow">Novos Posts</a>
+                            <a href="#" class="menu-linkRow">Procurar</a>
+                        </div>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'posts' %}">Membros</a>
+                    <button type="button" class="dropdown-toggle">▼</button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Online</a></li>
+                        <li><a href="#">Novos Posts</a></li>
+                        <li><a href="#">Procurar Postagens</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'detail' %}">Novidades</a>
+                    <button type="button" class="dropdown-toggle">▼</button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Novos Tópicos</a></li>
+                        <li><a href="#">Novos Posts</a></li>
+                        <li><a href="#">Últimas Atividades</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <div class="nav-buttons">
+            {% if user.is_authenticated %}
+                <form action="{% url 'search' %}" method="GET" class="search-form">
+                    <input type="text" name="q" placeholder="Pesquisar...">
+                    <button type="submit">Buscar</button>
+                </form>
+                <div class="nav-item"><a href="{% url 'logout' %}">Sair</a></div>
+            {% else %}
+                <form action="{% url 'search' %}" method="GET" class="search-form">
+                    <input type="text" name="q" placeholder="Pesquisar...">
+                    <button type="submit">Buscar</button>
+                </form>
+                <div class="nav-item"><a href="{% url 'login' %}">Login</a></div>
+                <div class="nav-item"><a href="{% url 'register' %}">Registrar</a></div>
+            {% endif %}
+        </div>
+    </div>
+</header>

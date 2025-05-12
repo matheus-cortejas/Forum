@@ -1,0 +1,29 @@
+/* Forum structure */
+.forum-wrapper {
+    display: flex;
+    justify-content: flex-start; /* Alterado para alinhar à esquerda */
+    gap: 20px;
+    padding: 20px;
+}
+
+.forum-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.forum-sidebar {
+    width: 300px;
+    margin-left: auto; /* Isso empurra a sidebar para a direita */
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+    .forum-wrapper {
+        flex-direction: column;
+    }
+    
+    .forum-sidebar {
+        width: 100%;
+        margin-left: 0;
+    }
+}

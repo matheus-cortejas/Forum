@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital@1&display=swap" rel="stylesheet">
+</head>
+
+</head>
+<body> 
+        <!-- cabeçalho-->
+        {% include "includes/navbar.html" %} 
+        <!--bloco de conteudo-->
+        {%block content%}
+    
+        {% endblock %}
+        <!--injetando arquivo do rodapé-->
+        {% include 'includes/footer.html'%}
+    <script src="{% static 'js/navbar.js' %}"></script>
+</body>
+</html>

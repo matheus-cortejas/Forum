@@ -1,0 +1,32 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/footer.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<footer>
+    <div class="footer-content">
+        <div class="footer-left">
+            <span>&copy; {% now "Y" %} Forum. All Rights Reserved</span>
+        </div>
+        
+        <div class="footer-middle">
+            <div class="footer-links">
+                <a href="#">Terms & Rules</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+        </div>
+
+        <div class="footer-right">
+            <div class="social-links">
+                <a href="https://github.com" target="_blank"><i class="fab fa-github"></i></a>
+                <a href="https://linkedin.com" target="_blank"><i class="fab fa-linkedin"></i></a>
+            </div>
+            <button id="theme-toggle" class="theme-toggle">🌙 Dark</button>
+            <button id="language-toggle" class="language-toggle">🌐 EN</button>
+        </div>
+    </div>
+</footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/footer.js' %}"></script>
+</body>
+</html>
