@@ -1,23 +1,6 @@
 /* Forum Layout */
-.forum-wrapper {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 20px;
-    flex-direction: row;
-}
-
-.forum-main {
-    flex: 1;
-    min-width: 0;
-    order: 1;
-}
-
-.forum-sidebar {
-    width: 300px;
-    flex-shrink: 0;
-    order: 2;
-}
+/* Remova regras de .forum-wrapper, .forum-main, .forum-sidebar daqui se já estão em components/forum.css */
+/* Use este arquivo apenas para customizações específicas da página de fóruns, se necessário. */
 
 /* Sidebar Sections */
 .sidebar-section {
@@ -68,16 +51,7 @@
 
 /* Mobile Responsiveness */
 @media screen and (max-width: 768px) {
-    .forum-wrapper {
-        flex-direction: column;
-    }
-    
-    .forum-main {
-        width: 100%;
-    }
-    
-    .forum-sidebar {
-        width: 100%;
-        margin-top: 20px;
+    .section-content {
+        padding: 10px;
     }
 }

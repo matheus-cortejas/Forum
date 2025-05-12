@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
-{%block content%}
-<link rel="stylesheet" href="/static/css/forums.css">
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/components/forum.css' %}">
+<link rel="stylesheet" href="{% static 'css/forums.css' %}">
 <div class="forum-wrapper">
     <div class="forum-main">
         <div class="container">
@@ -116,46 +117,12 @@
                         <br>on <small>12 Dec 2020</small>
                     </div>
                 </div>
-                <hr class="subforum-devider">
-                <div class="subforum-row">
-                    <div class="subforum-icon subforum-column center">
-                        <i class="fa fa-car center"></i>
-                    </div>
-                    <div class="subforum-description subforum-column">
-                        <h4><a href="#">Description Title</a></h4>
-                        <p>Description Content: let's try to be cool, otherwise,w at 'sthe point in libing together with people youdont' live.</p>
-                    </div>
-                    <div class="subforum-stats subforum-column center">
-                        <span>24 Posts | 12 Topics</span>
-                    </div>
-                    <div class="subforum-info subforum-column">
-                        <b><a href="">Last post</a></b> by <a href="">JustAUser</a> 
-                        <br>on <small>12 Dec 2020</small>
-                    </div>
-                </div>
             </div>
             
             <div class="subforum">
                 <div class="subforum-title">
                     <h1>General Information</h1>
                 </div>
-                <div class="subforum-row">
-                    <div class="subforum-icon subforum-column center">
-                        <i class="fa fa-car center"></i>
-                    </div>
-                    <div class="subforum-description subforum-column">
-                        <h4><a href="#">Description Title</a></h4>
-                        <p>Description Content: let's try to be cool, otherwise,w at 'sthe point in libing together with people youdont' live.</p>
-                    </div>
-                    <div class="subforum-stats subforum-column center">
-                        <span>24 Posts | 12 Topics</span>
-                    </div>
-                    <div class="subforum-info subforum-column">
-                        <b><a href="">Last post</a></b> by <a href="">JustAUser</a> 
-                        <br>on <small>12 Dec 2020</small>
-                    </div>
-                </div>
-                <hr class="subforum-devider">
                 <div class="subforum-row">
                     <div class="subforum-icon subforum-column center">
                         <i class="fa fa-car center"></i>
@@ -283,7 +250,7 @@
                     <span class="stat-label">Posts:</span>
                     <span class="stat-value">5,678</span>
                 </div>
-                <div class="stat-item"></div>
+                <div class="stat-item">
                     <span class="stat-label">Members:</span>
                     <span class="stat-value">890</span>
                 </div>
@@ -301,4 +268,4 @@
         <!-- Removendo a seção duplicada de Who's Online -->
     </div>
 </div>
-{%endblock%}
+{% endblock %}

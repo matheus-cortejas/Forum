@@ -1,5 +1,5 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
 <header>
     <div class="navbar">
         <a href="/" class="brand">
@@ -21,20 +21,20 @@
                 <li class="nav-item">
                     <a href="{% url 'posts' %}">Membros</a>
                     <button type="button" class="dropdown-toggle">▼</button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">Online</a></li>
-                        <li><a href="#">Novos Posts</a></li>
-                        <li><a href="#">Procurar Postagens</a></li>
-                    </ul>
+                    <div class="dropdown-menu" aria-hidden="true">
+                        <a href="#">Online</a>
+                        <a href="#">Novos Posts</a>
+                        <a href="#">Procurar Postagens</a>
+                    </div>
                 </li>
                 <li class="nav-item">
                     <a href="{% url 'detail' %}">Novidades</a>
                     <button type="button" class="dropdown-toggle">▼</button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">Novos Tópicos</a></li>
-                        <li><a href="#">Novos Posts</a></li>
-                        <li><a href="#">Últimas Atividades</a></li>
-                    </ul>
+                    <div class="dropdown-menu" aria-hidden="true">
+                        <a href="#">Novos Tópicos</a>
+                        <a href="#">Novos Posts</a>
+                        <a href="#">Últimas Atividades</a>
+                    </div>
                 </li>
             </ul>
         </div>

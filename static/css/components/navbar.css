@@ -85,7 +85,7 @@
     display: none;
     position: absolute;
     top: 100%;
-    left: 50%;
+    left: 0; /* Alinha à esquerda do botão */
     background-color: #ffffff;
     color: #000;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
@@ -96,15 +96,17 @@
     margin-top: 0; /* Adicionando margem para separar do item pai */
     opacity: 0;
     visibility: hidden;
-    transform: translateX(-50%) translateY(10px);
+    /* Remova ou sobrescreva transform */
+    transform: none;
     transition: all 0.2s ease;
 }
 
 .dropdown-menu.show {
     display: block; /* Removendo opacity e visibility, usando apenas display */
-    transform: translateX(-50%) translateY(0);
     opacity: 1;
     visibility: visible;
+    /* Remova ou sobrescreva transform */
+    transform: none;
 }
 
 .dropdown-menu a {

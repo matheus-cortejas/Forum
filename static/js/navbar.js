@@ -23,12 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
             dropdownMenu.setAttribute('aria-hidden', isExpanded);
             dropdownMenu.classList.toggle('show');
             
-            // Ajusta posição do menu
-            if (!isExpanded) {
-                const rect = this.getBoundingClientRect();
-                dropdownMenu.style.left = `${rect.left}px`;
-                dropdownMenu.style.top = `${rect.bottom + window.scrollY}px`;
-            }
+            // Remover qualquer ajuste manual de posição
+            dropdownMenu.style.left = '';
+            dropdownMenu.style.top = '';
         });
     });
     
