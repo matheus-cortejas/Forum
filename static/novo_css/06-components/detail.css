@@ -1,0 +1,65 @@
+/* Detail Component */
+
+.head {
+  display: flex;
+  background-color: var(--color-dark-4);
+  padding: 5px;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.authors {
+  flex: 20%;
+}
+
+.content {
+  flex: 80%;
+}
+
+.body {
+  display: flex;
+  background-color: var(--color-dark-2);
+  padding: 10px;
+  margin-top: 5px;
+}
+
+.body .authors .username {
+  font-size: 20px;
+}
+
+.body .authors img {
+  max-width: 50px;
+  max-height: 80px;
+}
+
+.body .content .comment button {
+  border: none;
+  padding: 10px;
+  font-weight: bolder;
+  box-shadow: 4px 6px #fff;
+  cursor: pointer;
+  float: right;
+}
+
+/* Comment section */
+.comment-area {
+  margin-bottom: 50px;
+}
+
+.comment-area textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px;
+  margin-block: 10px;
+}
+
+.comment-area input {
+  float: right;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.comment-area input:hover {
+  border: solid 1px #000000;
+}

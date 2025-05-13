@@ -1,0 +1,31 @@
+/* Layout objects - structural patterns */
+
+/* Forum structure */
+.forum-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+}
+
+.forum-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.forum-sidebar {
+  width: 300px;
+  margin-left: auto;
+}
+
+/* Responsive layouts */
+@media screen and (max-width: 768px) {
+  .forum-wrapper {
+    flex-direction: column;
+  }
+  
+  .forum-sidebar {
+    width: 100%;
+    margin-left: 0;
+  }
+}

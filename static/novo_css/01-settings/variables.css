@@ -1,0 +1,32 @@
+/* Variables */
+:root {
+  /* Colors */
+  --color-background: #000000;
+  --color-text: #FEFEFE;
+  --color-primary: #FF0042;
+  --color-secondary: #52057b;
+  --color-dark-1: #111314;
+  --color-dark-2: #131415;
+  --color-dark-3: #292B2E;
+  --color-dark-4: #2C2C2C;
+  
+  /* Fonts */
+  --font-size-base: 14px;
+  --font-family-primary: 'Titillium Web', sans-serif;
+  --font-size-h1: 16px;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 20px;
+  --spacing-xl: 40px;
+  
+  /* Layout */
+  --container-max-width: 1200px;
+  --border-radius: 5px;
+  
+  /* Transitions */
+  --transition-speed: 0.2s;
+  --transition-timing: ease-in-out;
+}

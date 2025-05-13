@@ -1,0 +1,30 @@
+/* Main CSS File - Imports all components */
+
+/* Settings - Variables */
+@import url("01-settings/variables.css");
+
+/* Tools - Mixins and Functions */
+@import url("02-tools/mixins.css");
+
+/* Generic - Reset and Normalizations */
+@import url("03-generic/reset.css");
+
+/* Elements - Base HTML elements */
+@import url("04-elements/base.css");
+
+/* Objects - Structural patterns */
+@import url("05-objects/layout.css");
+@import url("05-objects/containers.css");
+
+/* Components - Specific UI components */
+@import url("06-components/navbar.css");
+@import url("06-components/buttons.css");
+@import url("06-components/forum.css");
+@import url("06-components/search.css");
+@import url("06-components/posts.css");
+@import url("06-components/detail.css");
+@import url("06-components/forum-info.css");
+@import url("06-components/sidebar.css");
+
+/* Utilities - Helper classes */
+@import url("07-utilities/helpers.css");

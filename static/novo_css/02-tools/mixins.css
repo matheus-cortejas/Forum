@@ -1,0 +1,27 @@
+/* 
+  For a true ITCSS implementation, this would be a SCSS file with mixins
+  This is a placeholder file since we're using pure CSS
+*/
+
+/* Media query placeholders as CSS custom properties */
+:root {
+  --breakpoint-mobile: 460px;
+  --breakpoint-tablet: 1024px;
+  --breakpoint-desktop: 1200px;
+}
+
+/* 
+  If using a preprocessor like SCSS, we would define mixins here:
+  
+  @mixin mobile {
+    @media screen and (max-width: 460px) {
+      @content;
+    }
+  }
+  
+  @mixin tablet {
+    @media screen and (min-width: 461px) and (max-width: 1024px) {
+      @content;
+    }
+  }
+*/

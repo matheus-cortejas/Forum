@@ -1,0 +1,105 @@
+/* Posts Component */
+
+/* Posts table's head */
+.table-head {
+  display: flex;
+}
+
+.table-head div {
+  padding: 5px;
+  margin: 2px;
+  background-color: var(--color-dark-4);
+  font-weight: bold;
+}
+
+.table-head .status {
+  flex: 5%;
+}
+
+.table-head .subjects {
+  flex: 70%;
+}
+
+.table-head .replies {
+  flex: 10%;
+}
+
+.table-head .last-reply {
+  flex: 15%;
+}
+
+/* Posts table's body */
+.table-row {
+  display: flex;
+}
+
+.table-row .status, 
+.table-row .subjects, 
+.table-row .replies, 
+.table-row .last-reply {
+  padding: 5px;
+  margin: 2px;
+  background-color: var(--color-dark-2);
+}
+
+.table-row .status {
+  flex: 5%;
+  font-size: 30px;
+  text-align: center;
+}
+
+.table-row .subjects {
+  flex: 70%;
+}
+
+.table-row .replies {
+  flex: 10%;
+}
+
+.table-row .last-reply {
+  flex: 15%;
+}
+
+/* Navigation path */
+.navigate {
+  margin-block: var(--spacing-lg);
+  font-weight: lighter;
+  font-size: 24px;
+}
+
+.navigate a {
+  color: #fff;
+}
+
+.navigate a:hover {
+  color: var(--color-primary);
+  font-weight: bolder;
+}
+
+/* Pagination */
+.pagination {
+  padding: var(--spacing-lg);
+  font-size: 15px;
+}
+
+.pagination a {
+  color: #fff;
+  margin-inline: 5px;
+  padding: 5px 10px;
+  border: solid 0.5px #fff;
+}
+
+.pagination a:hover {
+  opacity: 0.5;
+}
+
+.note {
+  background-color: var(--color-dark-1);
+  padding: var(--spacing-lg);
+  display: block;
+}
+
+.note span {
+  font-size: 20px;
+  margin-block: 5px;
+}

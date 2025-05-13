@@ -1,0 +1,61 @@
+/* Container objects */
+
+.container {
+  margin: 0 auto;
+  padding: 0;
+  max-width: var(--container-max-width);
+}
+
+/* Center utility layout object */
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Grid layout for subforum */
+.subforum-row {
+  display: grid;
+  grid-template-columns: 7% 60% 13% 20%;
+}
+
+/* Responsive containers */
+@media screen and (max-width: 460px) {
+  .container {
+    margin: 10px;
+    padding: 10px;
+  }
+  
+  .subforum-row {
+    display: grid;
+    grid-template-columns: 25% 75%;
+    grid-template-rows: 65% 35%;
+  }
+}
+
+@media screen and (min-width: 460px) and (max-width: 1024px) {
+  .container {
+    margin: 15px;
+    padding: 15px;
+  }
+  
+  .subforum-row {
+    display: grid;
+    grid-template-columns: 10% 60% 10% 20%;
+  }
+}
+
+/* Main container layout with responsive padding */
+.container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding-left: var(--spacing-xl);
+  padding-right: var(--spacing-lg);
+}
+
+@media screen and (max-width: 768px) {
+  .container {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}

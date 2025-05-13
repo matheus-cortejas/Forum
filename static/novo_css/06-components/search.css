@@ -1,0 +1,32 @@
+/* Search Component */
+
+.search-box {
+  border: solid 1px var(--color-secondary);
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-xl);
+  display: flex;
+  justify-content: center;
+  box-shadow: 1px 2px 3px var(--color-secondary);
+}
+
+.search-box select {
+  padding: 10px;
+}
+
+.search-box input {
+  padding: 10px;
+}
+
+/* Responsive search box */
+@media screen and (max-width: 460px) {
+  .search-box {
+    flex-direction: column;
+  }
+  
+  .search-box input, 
+  .search-box button, 
+  .search-box select {
+    min-width: 300px;
+    margin-top: 5px;
+  }
+}

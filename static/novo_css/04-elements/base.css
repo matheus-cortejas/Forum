@@ -1,0 +1,46 @@
+/* Base element styles */
+
+html {
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-primary);
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+a {
+  color: var(--color-primary);
+  font-weight: bolder;
+  text-decoration: none;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: bolder;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* Font face definition */
+@font-face {
+  font-family: aquire;
+  src: url(aquire.otf);
+}
+
+/* Media queries for responsive typography */
+@media screen and (max-width: 460px) {
+  html {
+    font-size: 12px;
+  }
+}
+
+@media screen and (min-width: 460px) and (max-width: 1024px) {
+  html {
+    font-size: 14px;
+  }
+  
+  h1 {
+    font-size: 16px;
+  }
+}
