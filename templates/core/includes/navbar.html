@@ -13,27 +13,28 @@
                     <div class="dropdown-menu menu--structural" data-menu="menu" aria-hidden="true">
                         <span class="menu-arrow"></span>
                         <div class="menu-content">
-                            <a href="#" class="menu-linkRow">Novos Posts</a>
-                            <a href="#" class="menu-linkRow">Procurar</a>
+                            <a href="{% url 'topicos' %}" class="menu-linkRow">Topicos</a>
+                            <a href="{% url 'posts' %}" class="menu-linkRow">Posts</a>
                         </div>
                     </div>
                 </li>
                 <li class="nav-item">
-                    <a href="{% url 'posts' %}">Membros</a>
+                    <a href="{% url 'members' %}">Membros</a>
                     <button type="button" class="dropdown-toggle">▼</button>
                     <div class="dropdown-menu" aria-hidden="true">
-                        <a href="#">Online</a>
-                        <a href="#">Novos Posts</a>
-                        <a href="#">Procurar Postagens</a>
+                        <a href="{% url 'online' %}">Online agora</a>
+                         <a href="{% url 'search' %}">Procurar postagens de membro</a>
+// Colocar lógica de membros posteriormente
                     </div>
                 </li>
                 <li class="nav-item">
                     <a href="{% url 'detail' %}">Novidades</a>
                     <button type="button" class="dropdown-toggle">▼</button>
                     <div class="dropdown-menu" aria-hidden="true">
-                        <a href="#">Novos Tópicos</a>
-                        <a href="#">Novos Posts</a>
-                        <a href="#">Últimas Atividades</a>
+                        <a href="{% url 'novos_topicos' %}">Novos Tópicos</a>
+                        <a href="{% url 'novos_posts' %}">Novos Posts</a>
+                        <a href="{% url 'novidades' %}">Últimas Atividades</a>
+                        <a href="{% url 'search' %}">Pesquisar</a>
                     </div>
                 </li>
             </ul>
@@ -44,6 +45,7 @@
                     <input type="text" name="q" placeholder="Pesquisar...">
                     <button type="submit">Buscar</button>
                 </form>
+// Adicionar perfil                
                 <div class="nav-item"><a href="{% url 'logout' %}">Sair</a></div>
             {% else %}
                 <form action="{% url 'search' %}" method="GET" class="search-form">

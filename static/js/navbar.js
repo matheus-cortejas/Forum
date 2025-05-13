@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
             
+            // Feedback visual imediato
+            this.classList.toggle('active');
+            
             const dropdownMenu = this.nextElementSibling;
             const isExpanded = this.getAttribute('aria-expanded') === 'true';
             
@@ -13,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
             dropdownToggles.forEach(t => {
                 if (t !== this) {
                     t.setAttribute('aria-expanded', 'false');
+                    t.classList.remove('active');
                     t.nextElementSibling.setAttribute('aria-hidden', 'true');
                     t.nextElementSibling.classList.remove('show');
                 }
@@ -38,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
             dropdownToggles.forEach(toggle => {
                 toggle.setAttribute('aria-expanded', 'false');
                 toggle.nextElementSibling.setAttribute('aria-hidden', 'true');
-                toggle.style.transform = '';
+                toggle.classList.remove('active');
             });
         }
     });
