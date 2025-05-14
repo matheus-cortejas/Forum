@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Melhorar a detecção de tamanho de tela
-    const mobileMediaQuery = window.matchMedia('(max-width: 768px)');
+    const mobileMediaQuery = window.matchMedia('(max-width: 1024px)');
     
     // Função para ajustar posicionamento de dropdown em mobile
     function positionDropdowns() {

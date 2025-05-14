@@ -44,7 +44,7 @@
 }
 
 /* Responsive styles for tablets and smaller devices */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 1024px) {
   /* Show hamburger button */
   .mobile-menu-toggle {
     display: block;
@@ -137,44 +137,104 @@
 }
 
 /* Small mobile devices */
-@media screen and (max-width: 460px) {
+@media screen and (max-width: 480px) {
   .navbar {
     padding: 8px 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: 56px;
   }
-  
+
+  /* Hamburger à esquerda */
+  .mobile-menu-toggle {
+    left: 10px;
+    right: auto;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10003;
+  }
+
+  /* Logo centralizada */
+  .brand {
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: auto;
+  }
   .brand img {
     max-height: 40px;
   }
-  
-  .nav-buttons {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 5px;
-  }
-  
+
+  /* Esconde nav-buttons e search-form na navbar */
+  .nav-buttons,
   .search-form {
-    order: 3;
-    width: 100%;
-    margin-top: 8px;
+    display: none !important;
   }
-  
-  .search-form input[type="text"] {
-    width: 100%;
-  }
-  
-  .nav-item a {
-    font-size: 14px;
-  }
-  
-  .dropdown-menu a {
-    font-size: 12px;
-    padding: 8px 15px;
-  }
-  
-  /* Quando o menu mobile está ativo */
-  .navigation.active ~ .nav-buttons {
-    width: 100%;
+
+  /* Menu mobile lateral ocupa a tela toda, vindo da esquerda */
+  .navigation {
+    position: fixed;
+    top: 0;
+    left: -100vw;
+    right: auto;
+    width: 80vw;
+    max-width: 320px;
+    height: 100vh;
+    background: var(--color-dark-1);
+    max-height: none;
+    padding: 30px 20px 20px 20px;
+    box-shadow: none;
+    transition: left 0.3s cubic-bezier(.77,0,.18,1);
+    z-index: 10000;
+    overflow-y: auto;
+    display: flex;
     flex-direction: column;
     align-items: stretch;
+    justify-content: flex-start;
+  }
+  .navigation.active {
+    left: 0;
+    box-shadow: 0 0 0 100vw rgba(0,0,0,0.5);
+  }
+
+  /* Mostra Login, Register e Pesquisar dentro do menu lateral */
+  .navigation .nav-buttons,
+  .navigation .search-form {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+  }
+  .navigation .nav-buttons {
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .navigation .nav-buttons .btn,
+  .navigation .nav-buttons a {
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+    font-size: 16px;
+  }
+  .navigation .search-form {
+    order: 1;
+    margin-bottom: 20px;
+  }
+  .navigation .search-form input[type="text"] {
+    width: 100%;
+  }
+
+  /* Garante que o menu cubra tudo só quando aberto */
+  body.mobile-menu-open {
+    overflow: hidden;
   }
 }
