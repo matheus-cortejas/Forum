@@ -1,10 +1,17 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'novo_css/06-components/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'novo_css/06-components/navbar-mobile.css' %}">
 <header>
     <div class="navbar">
         <a href="/" class="brand">
             <img src="{% static 'img/logo.png' %}" alt="Logo">
         </a>
+        
+        <!-- Botão hamburguer para mobile -->
+        <button class="mobile-menu-toggle" aria-label="Menu" aria-expanded="false">
+            <span class="hamburger-icon"></span>
+        </button>
+        
         <div class="navigation">
             <ul class="nav-list">
                 <li class="nav-item">
@@ -39,6 +46,7 @@
                 </li>
             </ul>
         </div>
+        
         <div class="nav-buttons">
             {% if user.is_authenticated %}
                 <form action="{% url 'search' %}" method="GET" class="search-form">

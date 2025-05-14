@@ -18,6 +18,7 @@
 
 /* Components - Specific UI components */
 @import url("06-components/navbar.css");
+@import url("06-components/navbar-mobile.css");
 @import url("06-components/buttons.css");
 @import url("06-components/forum.css");
 @import url("06-components/search.css");

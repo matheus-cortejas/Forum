@@ -57,3 +57,37 @@ footer {
 .theme-toggle:hover, .language-toggle:hover {
     background: rgba(255, 255, 255, 0.1);
 }
+
+/* Responsividade para mobile */
+@media screen and (max-width: 768px) {
+    .footer-content {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .footer-left, .footer-middle, .footer-right {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .footer-right {
+        flex-wrap: wrap;
+    }
+}
+
+@media screen and (max-width: 460px) {
+    footer {
+        padding: 15px 10px;
+    }
+    
+    .footer-links a {
+        margin: 0 5px;
+        font-size: 12px;
+    }
+    
+    .theme-toggle, .language-toggle {
+        padding: 3px 8px;
+        font-size: 12px;
+    }
+}

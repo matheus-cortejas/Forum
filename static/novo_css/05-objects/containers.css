@@ -57,5 +57,37 @@
   .container {
     padding-left: 10px;
     padding-right: 10px;
+    margin: 0 10px;
+  }
+  
+  .subforum-row {
+    grid-template-columns: 10% 50% 15% 25%;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .subforum-row {
+    grid-template-columns: 12% 88%;
+    grid-template-rows: auto auto;
+  }
+  
+  .subforum-stats, .subforum-info {
+    grid-column: 2;
+    padding-left: 12px;
+  }
+  
+  .subforum-stats {
+    text-align: left;
+  }
+  
+  .subforum-icon {
+    grid-row: span 2;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .container {
+    padding-left: 10px;
+    padding-right: 10px;
   }
 }
