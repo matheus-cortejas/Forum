@@ -18,18 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-
-    # core views
-    path('', views.home, name='home'),
-    path('search/', views.search, name='search'),
-    path('novidades/', views.novidades, name='novidades'),
-
     # include app urls
     path('topicos/', include('topics.urls')),
     path('posts/', include('posts.urls')),
     path('accounts/', include('accounts.urls')),
+    path('', include('home.urls')),
+    path('', include('core.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
