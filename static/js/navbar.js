@@ -34,8 +34,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Fecha os menus quando clicar fora
-    document.addEventListener('click', function(e) {
-        if (!e.target.matches('.dropdown-toggle')) {
+    
+document.addEventListener('click', function(e) {
+    // Fecha apenas se o clique NÃO for dentro do toggle nem do menu
+    if (
+        !e.target.closest('.dropdown-toggle') &&
+        !e.target.closest('.dropdown-menu')
+    ) {
+        setTimeout(() => {
             document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
                 menu.classList.remove('show');
             });
@@ -44,8 +50,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 toggle.nextElementSibling.setAttribute('aria-hidden', 'true');
                 toggle.classList.remove('active');
             });
-        }
-    });
+        }, 10); // Pequeno delay para garantir ordem dos eventos
+    }
+});
 
     // Melhorar a detecção de tamanho de tela
     const mobileMediaQuery = window.matchMedia('(max-width: 1024px)');
