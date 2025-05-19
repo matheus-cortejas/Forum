@@ -1,0 +1,149 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="assunto-wrapper">
+    <div class="header">
+        <h1>{{ assunto.titulo }}</h1>
+        <p class="descricao">{{ assunto.descricao }}</p>
+    </div>
+
+    <!-- Navegação e Filtros -->
+    <div class="navigation-bar">
+        <div class="pagination-basic">
+            <span>1</span>
+            <a href="#">2</a>
+            <a href="#">3</a>
+            <span>...</span>
+            <a href="#">Próxima »</a>
+        </div>
+        <div class="filters">
+            <a href="#" class="filter-link">Filtros</a>
+        </div>
+    </div>
+
+    <!-- Tópicos Fixos -->
+    <div class="topicos-section">
+        <div class="section-title">
+            <h2>Tópicos Fixos</h2>
+        </div>
+        {% for thread in threads_fixas %}
+        <div class="thread-row">
+            <div class="thread-icon">
+                <i class="fa fa-thumb-tack"></i>
+            </div>
+            <div class="thread-info">
+                <h3 class="thread-title">{{ thread.titulo }}</h3>
+                <div class="thread-meta">
+                    <span class="author">{{ thread.autor.username }}</span>
+                    <span class="date">{{ thread.criado_em|date:"d/m/Y" }}</span>
+                </div>
+            </div>
+            <div class="thread-stats">
+                <span class="replies">Respostas: {{ thread.respostas_count }}</span>
+                <span class="views">Visualizações: {{ thread.visualizacoes }}</span>
+            </div>
+            <div class="thread-last-post">
+                <div class="last-post-info">
+                    <span class="last-post-date">{{ thread.atualizado_em|date:"d/m/Y H:i" }}</span>
+                    <span class="last-post-author">por {{ thread.ultimo_autor }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Tópicos Normais -->
+    <div class="topicos-section">
+        <div class="section-title">
+            <h2>Tópicos normais</h2>
+        </div>
+        {% for thread in threads_normais %}
+        <div class="thread-row">
+            <div class="thread-icon">
+                <i class="fa fa-comment"></i>
+            </div>
+            <div class="thread-info">
+                <h3 class="thread-title">{{ thread.titulo }}</h3>
+                <div class="thread-meta">
+                    <span class="author">{{ thread.autor.username }}</span>
+                    <span class="date">{{ thread.criado_em|date:"d/m/Y" }}</span>
+                </div>
+            </div>
+            <div class="thread-stats">
+                <span class="replies">Respostas: {{ thread.respostas_count }}</span>
+                <span class="views">Visualizações: {{ thread.visualizacoes }}</span>
+            </div>
+            <div class="thread-last-post">
+                <div class="last-post-info">
+                    <span class="last-post-date">{{ thread.atualizado_em|date:"d/m/Y H:i" }}</span>
+                    <span class="last-post-author">por {{ thread.ultimo_autor }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if not threads_normais %}
+        <div class="no-threads">
+            <p>Nenhum tópico encontrado neste assunto.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Posts Normais -->
+    <div class="posts-section">
+        <div class="section-title">
+            <h2>Últimos Posts</h2>
+        </div>
+        {% if ultimos_posts %}
+        {% for post in ultimos_posts %}
+        <div class="post-row">
+            <div class="post-icon">
+                <i class="fa fa-reply"></i>
+            </div>
+            <div class="post-info">
+                <h3 class="post-title">
+                    Re: {{ post.thread.titulo }}
+                </h3>
+                <div class="post-meta">
+                    <span class="author">{{ post.autor.username }}</span>
+                    <span class="date">{{ post.criado_em|date:"d/m/Y" }}</span>
+                </div>
+            </div>
+            <div class="post-preview">
+                <p>{{ post.conteudo|truncatewords:30 }}</p>
+            </div>
+            <div class="post-last-update">
+                <span class="post-time">{{ post.criado_em|date:"d/m/Y H:i" }}</span>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="no-posts">
+            <p>Nenhuma resposta encontrada neste assunto.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Paginação -->
+    {% if threads_normais.has_other_pages %}
+    <div class="pagination">
+        {% if threads_normais.has_previous %}
+        <a href="?page={{ threads_normais.previous_page_number }}">&laquo; Anterior</a>
+        {% endif %}
+
+        {% for num in threads_normais.paginator.page_range %}
+        {% if threads_normais.number == num %}
+        <span class="current">{{ num }}</span>
+        {% else %}
+        <a href="?page={{ num }}">{{ num }}</a>
+        {% endif %}
+        {% endfor %}
+
+        {% if threads_normais.has_next %}
+        <a href="?page={{ threads_normais.next_page_number }}">Próximo &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

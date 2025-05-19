@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     'Forum',
     'accounts',
     'posts',
-    'topics',
     'home',
     'core',
 ]
@@ -67,6 +66,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.atividades_recentes',
+                'core.context_processors.forum_stats',
             ],
         },
     },
