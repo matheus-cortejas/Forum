@@ -20,7 +20,7 @@
                     <div class="dropdown-menu menu--structural" data-menu="menu" aria-hidden="true">
                         <span class="menu-arrow"></span>
                         <div class="menu-content">
-                            <a href="{% url 'topicos' %}" class="menu-linkRow">Topicos</a>
+                            <a href="{% url 'threads' %}" class="menu-linkRow">Topicos</a>
                             <a href="{% url 'posts' %}" class="menu-linkRow">Posts</a>
                         </div>
                     </div>
@@ -35,12 +35,11 @@
                     </div>
                 </li>
                 <li class="nav-item">
-                    <a href="{% url 'detail' %}">Novidades</a>
+                    <a href="{% url 'novidades' %}">Novidades</a>
                     <button type="button" class="dropdown-toggle">▼</button>
                     <div class="dropdown-menu" aria-hidden="true">
-                        <a href="{% url 'novos_topicos' %}">Novos Tópicos</a>
-                        <a href="{% url 'novos_posts' %}">Novos Posts</a>
-                        <a href="{% url 'novidades' %}">Últimas Atividades</a>
+                        <a href="{% url 'recent_threads' %}">Novos Tópicos</a>
+                        <a href="{% url 'recent_posts' %}">Novos Posts</a>
                         <a href="{% url 'search' %}">Pesquisar</a>
                     </div>
                 </li>

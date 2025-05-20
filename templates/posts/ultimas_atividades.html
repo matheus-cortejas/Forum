@@ -1,0 +1,92 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <!--Navigation-->
+    <div class="navigate">
+        <span><a href="{% url 'home' %}">MyForum - Forums</a> >> <a href="">Últimas Atividades</a></span>
+    </div>
+    <!--Display posts table-->
+    <div class="posts-table">
+        <div class="table-head">
+            <div class="status">Status</div>
+            <div class="subjects">Assuntos</div>
+            <div class="replies">Respostas/Visualizações</div>
+            <div class="last-reply">Última Atualização</div>
+        </div>
+        
+        {% for atividade in atividades %}
+        <div class="table-row">
+            <div class="status">
+                {% if atividade.tipo == 'THREAD' %}
+                    <i class="fa fa-comment"></i>
+                {% else %}
+                    <i class="fa fa-reply"></i>
+                {% endif %}
+                
+                {% if atividade.fixado %}
+                    <i class="fa fa-thumbtack"></i>
+                {% endif %}
+                
+                {% if atividade.fechado %}
+                    <i class="fa fa-lock"></i>
+                {% endif %}
+            </div>
+            <div class="subjects">
+                {% if atividade.tipo == 'THREAD' %}
+                    <a href="{% url 'postagem_detail' atividade.assunto.categoria.slug atividade.assunto.slug atividade.id %}">
+                        {{ atividade.titulo }}
+                    </a>
+                {% else %}
+                    <a href="{% url 'postagem_detail' atividade.assunto.categoria.slug atividade.assunto.slug atividade.id %}">
+                        Re: {{ atividade.thread.titulo }}
+                    </a>
+                {% endif %}
+                <br>
+                <span>
+                    {% if atividade.assunto %}
+                    Em <b><a href="">{{ atividade.assunto.nome }}</a></b> •
+                    {% endif %}
+                    Iniciado por <b><a href="">{{ atividade.autor.username }}</a></b>
+                </span>
+            </div>
+            <div class="replies">
+                {% if atividade.replies.count %}
+                    {{ atividade.replies.count }} respostas <br>
+                {% else %}
+                    0 respostas <br>
+                {% endif %}
+                {{ atividade.visualizacoes }} visualizações
+            </div>
+
+            <div class="last-reply">
+                {{ atividade.criado_em|date:"d M Y" }}
+                <br>Por <b><a href="">{{ atividade.autor.username }}</a></b>
+            </div>
+        </div>
+        {% empty %}
+        <div class="table-row">
+            <div class="subjects" style="width: 100%; text-align: center;">
+                Nenhuma atividade recente encontrada.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!--Pagination starts-->
+    {% if atividades.has_other_pages %}
+    <div class="pagination">
+        páginas: 
+        {% for i in atividades.paginator.page_range %}
+            {% if atividades.number == i %}
+                <a class="active" href="?page={{ i }}">{{ i }}</a>
+            {% else %}
+                <a href="?page={{ i }}">{{ i }}</a>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    <!--pagination ends-->
+</div>
+{% endblock %}
