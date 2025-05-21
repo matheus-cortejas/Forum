@@ -14,8 +14,14 @@
             <!-- Filtros e Navegação -->
             <div class="navigation-bar">
                 <div class="filters">
+                    <a href="{% url 'recent_threads' %}" class="filter-link">Novos Tópicos</a>
                     <a href="#" class="filter-link">Filtros</a>
                 </div>
+                {% if user.is_authenticated %}
+                <div class="actions">
+                    <a href="#" class="btn btn-primary">Novo Tópico</a>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Tópicos Fixos -->
@@ -29,7 +35,12 @@
                         <i class="fa fa-thumb-tack"></i>
                     </div>
                     <div class="subforum-description subforum-column">
-                        <h4><a href="#">{{ thread.titulo }}</a></h4>
+                        <h4>
+                            <a
+                                href="{% url 'thread_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug thread_id=thread.id %}">
+                                {{ thread.titulo }}
+                            </a>
+                        </h4>
                         <div class="thread-meta">
                             <span class="author">{{ thread.autor.username }}</span>
                             <span class="date">{{ thread.criado_em|date:"d/m/Y" }}</span>
@@ -46,6 +57,12 @@
                 {% if not forloop.last %}
                 <hr class="subforum-devider">{% endif %}
                 {% endfor %}
+
+                {% if not threads_fixas %}
+                <div class="no-threads">
+                    <p>Nenhum tópico fixo encontrado neste assunto.</p>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Tópicos Normais -->
@@ -59,7 +76,12 @@
                         <i class="fa fa-comment"></i>
                     </div>
                     <div class="subforum-description subforum-column">
-                        <h4><a href="#">{{ thread.titulo }}</a></h4>
+                        <h4>
+                            <a
+                                href="{% url 'thread_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug thread_id=thread.id %}">
+                                {{ thread.titulo }}
+                            </a>
+                        </h4>
                         <div class="thread-meta">
                             <span class="author">{{ thread.autor.username }}</span>
                             <span class="date">{{ thread.criado_em|date:"d/m/Y" }}</span>
@@ -110,14 +132,18 @@
                 <div class="subforum-title">
                     <h2>Posts Normais</h2>
                 </div>
-                {% if ultimos_posts %}
                 {% for post in ultimos_posts %}
                 <div class="subforum-row">
                     <div class="subforum-icon subforum-column center">
                         <i class="fa fa-reply"></i>
                     </div>
                     <div class="subforum-description subforum-column">
-                        <h4><a href="#">{{ post.titulo }}</a></h4>
+                        <h4>
+                            <a
+                                href="{% url 'post_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug post_id=post.id %}">
+                                {{ post.titulo }}
+                            </a>
+                        </h4>
                         <div class="post-preview">{{ post.conteudo|truncatewords:30 }}</div>
                         <div class="thread-meta">
                             <span class="author">{{ post.autor.username }}</span>
@@ -134,7 +160,8 @@
                 {% if not forloop.last %}
                 <hr class="subforum-devider">{% endif %}
                 {% endfor %}
-                {% else %}
+
+                {% if not ultimos_posts %}
                 <div class="no-posts">
                     <p>Nenhuma resposta encontrada neste assunto.</p>
                 </div>

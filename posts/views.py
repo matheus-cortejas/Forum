@@ -45,12 +45,20 @@ def recent_posts(request):
     """Lista os posts mais recentes"""
     objetos = Post.objects.filter(
         tipo='POST'
-    ).select_related('autor', 'thread', 'assunto').order_by('-criado_em')[:50]
+    ).select_related('autor', 'assunto').order_by('-criado_em')[:50]
     return render(request, 'posts/list.html', {
         'objetos': objetos,
         'titulo': 'Posts Recentes',
         'tipo': 'post'
     })
+
+def thread_detail(request, categoria_slug, assunto_slug, thread_id):
+    """Redireciona para a view genérica de postagem (thread)"""
+    return postagem_detail(request, categoria_slug, assunto_slug, thread_id)
+
+def post_detail(request, categoria_slug, assunto_slug, post_id):
+    """Redireciona para a view genérica de postagem (post)"""
+    return postagem_detail(request, categoria_slug, assunto_slug, post_id)
 
 def postagem_detail(request, categoria_slug, assunto_slug, postagem_id):
     """View para exibir uma postagem (thread ou post) e suas respostas"""
@@ -101,7 +109,7 @@ def threads(request):
 
 def posts(request):
     """Lista todos os posts com filtros e ordenação por visualizações"""
-    posts_qs = Post.objects.filter(tipo='POST').select_related('autor', 'thread', 'assunto')
+    posts_qs = Post.objects.filter(tipo='POST').select_related('autor', 'assunto')
     # Filtros podem ser aplicados aqui usando request.GET
     posts_qs = posts_qs.order_by('-visualizacoes')
     paginator = Paginator(posts_qs, 20)

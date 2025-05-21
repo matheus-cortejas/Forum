@@ -35,12 +35,12 @@
             </div>
             <div class="subjects">
                 {% if atividade.tipo == 'THREAD' %}
-                    <a href="{% url 'postagem_detail' atividade.assunto.categoria.slug atividade.assunto.slug atividade.id %}">
+                    <a href="{% url 'thread_detail' atividade.assunto.categoria.slug atividade.assunto.slug atividade.id %}">
                         {{ atividade.titulo }}
                     </a>
                 {% else %}
-                    <a href="{% url 'postagem_detail' atividade.assunto.categoria.slug atividade.assunto.slug atividade.id %}">
-                        Re: {{ atividade.thread.titulo }}
+                    <a href="{% url 'post_detail' atividade.assunto.categoria.slug atividade.assunto.slug atividade.id %}">
+                        {{ atividade.titulo }}
                     </a>
                 {% endif %}
                 <br>
