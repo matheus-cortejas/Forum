@@ -2,5 +2,71 @@
 {% load static %}
 
 {% block content %}
-<h1>Lógica de pesquisa</h1>
+<script src="{% static 'js/search.js' %}"></script>
+
+<div class="search-container">
+    <div class="search-tabs">
+        <button class="tab-btn active" data-tab="conteudo">Pesquisar Conteúdo</button>
+        <button class="tab-btn" data-tab="usuarios" disabled>Pesquisar Usuários</button>
+    </div>
+    <div class="tab-content active" id="tab-conteudo">
+        <form method="get" action="{% url 'search_result' %}" class="search-form">
+            <div class="search-fields">
+                <div class="field-group">
+                    <label for="termo">Palavras-chave:</label>
+                    <input type="text" id="termo" name="termo" placeholder="Digite palavras-chave...">
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" name="apenas_titulo">
+                            Pesquisar apenas por título
+                        </label>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label for="autor">Postado por:</label>
+                    <input type="text" id="autor" name="autor" placeholder="Nome do autor (opcional)">
+                </div>
+                <div class="field-group">
+                    <label>Data:</label>
+                    <input type="date" name="data_inicio" placeholder="De">
+                    <input type="date" name="data_fim" placeholder="Até">
+                </div>
+                <div class="field-group">
+                    <label for="min_respostas">Número mínimo de respostas:</label>
+                    <input type="number" id="min_respostas" name="min_respostas" min="0" value="0">
+                </div>
+                <div class="field-group">
+                    <label for="prefixos">Prefixos:</label>
+                    <input type="text" id="prefixos" name="prefixos" placeholder="Ex: [HUMOR], [AMD]...">
+                </div>
+                <div class="field-group">
+                    <label for="subforum">Pesquisar no Fórum:</label>
+                    <input type="text" id="subforum" name="subforum" placeholder="Todos os Fóruns">
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" name="incluir_subforuns" checked>
+                            Incluir sub-fóruns
+                        </label>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label>Ordenar por:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="ordenacao" value="relevance" checked> Relevância</label>
+                        <label><input type="radio" name="ordenacao" value="date"> Data</label>
+                        <label><input type="radio" name="ordenacao" value="replies"> Mais Respondidos</label>
+                    </div>
+                </div>
+            </div>
+            <div class="search-actions">
+                <button type="submit" class="btn btn-primary">Pesquisar</button>
+            </div>
+        </form>
+    </div>
+    <div class="tab-content" id="tab-usuarios">
+        <div class="search-users-disabled">
+            <p>Pesquisa de usuários será implementada em breve.</p>
+        </div>
+    </div>
+</div>
 {% endblock %}

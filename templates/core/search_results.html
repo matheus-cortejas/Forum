@@ -1,0 +1,90 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="search-results-container">
+    <div class="search-summary">
+        {% if busca_realizada %}
+            <h2>Resultados da Pesquisa</h2>
+            {% if total_resultados > 0 %}
+                <p class="results-count">
+                    {{ total_resultados }} resultado{{ total_resultados|pluralize }} encontrado{{ total_resultados|pluralize }}
+                    {% if termo %} para <span class="highlight">"{{ termo }}"</span>{% endif %}
+                    {% if autor %} por <span class="highlight">{{ autor }}</span>{% endif %}
+                    {% if subforum %} em <span class="highlight">{{ subforum }}</span>{% endif %}
+                </p>
+            {% else %}
+                <p class="no-results">
+                    Não foram encontrados resultados para sua pesquisa.
+                </p>
+            {% endif %}
+        {% else %}
+            <h2>Pesquisa</h2>
+            <p>Digite um termo para pesquisar no fórum.</p>
+        {% endif %}
+        <a href="{% url 'search' %}" class="btn btn-secondary">Nova Pesquisa</a>
+    </div>
+
+    {% if resultados %}
+    <div class="posts-table">
+        <div class="table-head">
+            <div class="status">Status</div>
+            <div class="subjects">Assunto</div>
+            <div class="replies">Respostas/Views</div>
+            <div class="last-reply">Data</div>
+        </div>
+        
+        {% for post in resultados %}
+        <div class="table-row">
+            <div class="status">
+                <i class="fa {% if post.tipo == 'THREAD' %}fa-comment{% else %}fa-reply{% endif %}"></i>
+            </div>
+            
+            <div class="subjects">
+                <a href="{% if post.tipo == 'THREAD' %}{% url 'thread_detail' categoria_slug=post.assunto.categoria.slug assunto_slug=post.assunto.slug thread_id=post.id %}{% else %}{% url 'post_detail' categoria_slug=post.assunto.categoria.slug assunto_slug=post.assunto.slug post_id=post.id %}{% endif %}">
+                    {{ post.titulo }}
+                </a>
+                <br>
+                <span>
+                    Em <b><a href="{% url 'assunto_detail' categoria_slug=post.assunto.categoria.slug assunto_slug=post.assunto.slug %}">{{ post.assunto.nome }}</a></b> • 
+                    Por <b><a href="">{{ post.autor.username }}</a></b>
+                </span>
+            </div>
+            
+            <div class="replies">
+                {{ post.respostas_count|default:"0" }} respostas <br>
+                {{ post.visualizacoes|default:"0" }} views
+            </div>
+            
+            <div class="last-reply">
+                {{ post.criado_em|date:"d/m/Y H:i" }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Paginação -->
+    {% if resultados.has_other_pages %}
+    <div class="pagination">
+        {% if resultados.has_previous %}
+            <a href="?termo={{ termo }}&apenas_titulo={{ apenas_titulo }}&autor={{ autor }}&data_inicio={{ data_inicio }}&data_fim={{ data_fim }}&min_respostas={{ min_respostas }}&prefixos={{ prefixos }}&subforum={{ subforum }}&incluir_subforuns={{ incluir_subforuns }}&ordenacao={{ ordenacao }}&page={{ resultados.previous_page_number }}">&laquo; Anterior</a>
+        {% endif %}
+        
+        {% for i in resultados.paginator.page_range %}
+            {% if i >= resultados.number|add:"-2" and i <= resultados.number|add:"2" %}
+                {% if i == resultados.number %}
+                    <span class="current">{{ i }}</span>
+                {% else %}
+                    <a href="?termo={{ termo }}&apenas_titulo={{ apenas_titulo }}&autor={{ autor }}&data_inicio={{ data_inicio }}&data_fim={{ data_fim }}&min_respostas={{ min_respostas }}&prefixos={{ prefixos }}&subforum={{ subforum }}&incluir_subforuns={{ incluir_subforuns }}&ordenacao={{ ordenacao }}&page={{ i }}">{{ i }}</a>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        
+        {% if resultados.has_next %}
+            <a href="?termo={{ termo }}&apenas_titulo={{ apenas_titulo }}&autor={{ autor }}&data_inicio={{ data_inicio }}&data_fim={{ data_fim }}&min_respostas={{ min_respostas }}&prefixos={{ prefixos }}&subforum={{ subforum }}&incluir_subforuns={{ incluir_subforuns }}&ordenacao={{ ordenacao }}&page={{ resultados.next_page_number }}">Próxima &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

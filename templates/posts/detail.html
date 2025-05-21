@@ -13,7 +13,7 @@
             {% if postagem.tipo == 'THREAD' %}
                 {{ postagem.titulo }}
             {% else %}
-                Re: {{ postagem.thread.titulo }}
+                {{ postagem.titulo }}
             {% endif %}
         </span>
     </div>
@@ -27,7 +27,7 @@
                 {% if postagem.tipo == 'THREAD' %}
                     Tópico: {{ postagem.titulo }} (Visualizações: {{ postagem.visualizacoes }})
                 {% else %}
-                    Re: {{ postagem.thread.titulo }}
+                    {{ postagem.titulo }}
                 {% endif %}
             </div>
         </div>
