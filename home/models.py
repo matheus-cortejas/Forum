@@ -31,6 +31,19 @@ class Assunto(models.Model):
     class Meta:
         ordering = ['ordem', 'titulo']
 
+    def total_threads(self):
+        return self.postagens.filter(tipo='THREAD').count()
+
+    def total_posts(self):
+        return self.postagens.filter(tipo='POST').count()
+
+    def latest_post(self):
+        return self.postagens.order_by('-criado_em').first()
+    
+    def total_respostas(self):
+        from posts.models import Reply
+        return Reply.objects.filter(postagem__assunto=self).count()
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.titulo)

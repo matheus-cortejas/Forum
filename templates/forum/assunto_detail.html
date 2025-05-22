@@ -36,6 +36,10 @@
                     </div>
                     <div class="subforum-description subforum-column">
                         <h4>
+                            {% if thread.tag_sistema %}
+                            <span class="thread-tag" style="background-color: {{ thread.tag_sistema.cor }}; color: #fff;">
+                                [{{ thread.tag_sistema.nome }}]</span>
+                            {% endif %}
                             <a
                                 href="{% url 'thread_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug thread_id=thread.id %}">
                                 {{ thread.titulo }}
@@ -77,6 +81,10 @@
                     </div>
                     <div class="subforum-description subforum-column">
                         <h4>
+                            {% if thread.tag_sistema %}
+                            <span class="thread-tag" style="background-color: {{ thread.tag_sistema.cor }}; color: #fff;">
+                                [{{ thread.tag_sistema.nome }}]</span>
+                            {% endif %}
                             <a
                                 href="{% url 'thread_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug thread_id=thread.id %}">
                                 {{ thread.titulo }}
@@ -139,6 +147,10 @@
                     </div>
                     <div class="subforum-description subforum-column">
                         <h4>
+                            {% if post.tag_sistema %}
+                            <span class="thread-tag" style="background-color: {{ post.tag_sistema.cor }}; color: #fff;">
+                                [{{ post.tag_sistema.nome }}]</span>
+                            {% endif %}
                             <a
                                 href="{% url 'post_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug post_id=post.id %}">
                                 {{ post.titulo }}
@@ -151,7 +163,7 @@
                         </div>
                     </div>
                     <div class="subforum-stats subforum-column center">
-                        <span>{{ post.criado_em|date:"d/m/Y H:i" }}</span>
+                        <span>{{ post.criado_em|date:"d/m/Y" }}</span>
                     </div>
                     <div class="subforum-info subforum-column">
                         <span class="last-post-author">por {{ post.autor.username }}</span>

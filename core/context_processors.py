@@ -7,22 +7,28 @@ def forum_stats(request):
     """Context processor para estatísticas do fórum"""
     User = get_user_model()
     
+    online_record = 8000
+
+    # Simulação de usuários online
+    online_members = [
+        {'username': 'Admin1', 'role': 'admin'},
+        {'username': 'Mod1', 'role': 'moderator'},
+        {'username': 'VIPUser', 'role': 'vip'},
+        {'username': 'RegularUser', 'role': 'user'},
+    ]
+    online_guests = 45  # Simulado
+
     return {
-        'trending_posts': Postagem.objects.select_related(
-            'autor', 
-            'assunto'
-        ).order_by('-visualizacoes')[:5],
-        
-        'recent_posts': Postagem.objects.select_related(
-            'autor', 
-            'assunto'
-        ).order_by('-criado_em')[:5],
-        
+        'trending_threads': Postagem.objects.filter(tipo='THREAD').select_related('autor', 'assunto').order_by('-visualizacoes')[:5],
+        'recent_posts': Postagem.objects.filter(tipo='POST').select_related('autor', 'assunto').order_by('-criado_em')[:5],
         'forum_stats': {
             'total_topics': Postagem.objects.filter(tipo='THREAD').count(),
-            'total_posts': Postagem.objects.count(),
+            'total_posts': Postagem.objects.filter(tipo='POST').count(),
             'total_members': User.objects.count(),
             'newest_member': User.objects.order_by('-date_joined').first(),
+            'online_record': online_record,
+            'online_members': online_members,
+            'online_guests': online_guests,
         }
     }
 

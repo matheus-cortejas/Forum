@@ -6,7 +6,7 @@ from django.utils.text import slugify
 class Tag(models.Model):
     """Tags do sistema criadas pelo admin"""
     nome = models.CharField(max_length=30, unique=True)
-    cor = models.CharField(max_length=20, blank=True)
+    cor = models.CharField(max_length=20, default="#888888")  # hex ou rgb
     slug = models.SlugField(unique=True, blank=True)
     ordem = models.PositiveIntegerField(default=0)
     is_sistema = models.BooleanField(default=False, help_text='Tag obrigatória do sistema (ex: Dúvida, Discussão)')

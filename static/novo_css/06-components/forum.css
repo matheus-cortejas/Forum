@@ -91,3 +91,15 @@
   font-size: 20px;
   font-weight: bold;
 }
+
+.thread-tag {
+    display: inline-block;
+    padding: 1px .35em;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 80%;
+    line-height: 1.26;
+    text-decoration: none;
+    font-weight: bold;
+    margin-right: 4px;
+}
