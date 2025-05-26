@@ -1,33 +1,93 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Q
+from django.db.models import F, Q, Prefetch
 from .models import Postagem as Post, Reply, ReacaoPostagem
 from home.models import Assunto
 from django.core.paginator import Paginator
 from itertools import chain
 from operator import attrgetter
+from core.context_processors import filtros_forum
 
 def ultimas_atividades(request):
-    """Lista todas as atividades recentes (threads, posts, etc)"""
-    # Buscar threads recentes
-    threads = Post.objects.filter(
-        tipo='THREAD'
-    ).select_related('autor', 'assunto')[:20]
-    
-    # Buscar posts recentes
-    posts = Post.objects.filter(
-        tipo='POST'
-    ).select_related('autor', 'assunto')[:20]
-    
-    # Combinar e ordenar por data
-    todas_atividades = sorted(
-        chain(threads, posts),
-        key=attrgetter('criado_em'),
-        reverse=True
-    )[:50]
-    
+    """Lista todas as atividades recentes (threads, posts, etc) com filtros"""
+    filtros = filtros_forum(request)
+    tipo = request.GET.get('tipo', 'all')
+    prefixo = request.GET.get('prefixo', '')
+    tags_usuario = request.GET.get('tags', '')
+    iniciada_por = request.GET.get('autor', '')
+    tipo_organizacao = request.GET.get('ordem', 'recente')
+    page = request.GET.get('page', 1)
+    data_inicio = request.GET.get('data_inicio', '')
+    data_fim = request.GET.get('data_fim', '')
+    ordem_crescente = request.GET.get('ordem_crescente', 'desc') == 'asc'
+
+    threads = Post.objects.filter(tipo='THREAD')
+    posts = Post.objects.filter(tipo='POST')
+
+    # Filtros
+    if tipo == 'thread':
+        queryset = threads
+    elif tipo == 'post':
+        queryset = posts
+    else:
+        queryset = Post.objects.all()
+
+    if prefixo:
+        queryset = queryset.filter(tag_sistema__slug=prefixo)
+    if tags_usuario:
+        tags_list = [tag.strip() for tag in tags_usuario.split(',') if tag.strip()]
+        for tag in tags_list:
+            queryset = queryset.filter(tags_especificas__nome__icontains=tag)
+    if iniciada_por:
+        queryset = queryset.filter(autor__username__icontains=iniciada_por)
+    if data_inicio:
+        try:
+            from datetime import datetime
+            data_inicio_dt = datetime.strptime(data_inicio, "%Y-%m-%d")
+            queryset = queryset.filter(criado_em__date__gte=data_inicio_dt)
+        except Exception:
+            pass
+    if data_fim:
+        try:
+            from datetime import datetime
+            data_fim_dt = datetime.strptime(data_fim, "%Y-%m-%d")
+            queryset = queryset.filter(criado_em__date__lte=data_fim_dt)
+        except Exception:
+            pass
+
+    # Ordenação
+    if tipo_organizacao == 'antigo':
+        queryset = queryset.order_by('criado_em' if ordem_crescente else '-criado_em')
+    elif tipo_organizacao == 'visualizacoes':
+        queryset = queryset.order_by('visualizacoes' if ordem_crescente else '-visualizacoes')
+    elif tipo_organizacao == 'atividade':
+        queryset = queryset.annotate(ultima_atividade=F('atualizado_em')).order_by('ultima_atividade' if ordem_crescente else '-ultima_atividade', 'criado_em' if ordem_crescente else '-criado_em')
+    else:
+        queryset = queryset.order_by('criado_em' if ordem_crescente else '-criado_em')
+
+    queryset = queryset.select_related('autor', 'assunto', 'tag_sistema').prefetch_related('tags_especificas')
+    paginator = Paginator(queryset, 20)
+    try:
+        atividades = paginator.page(page)
+    except:
+        atividades = paginator.page(1)
+
     return render(request, 'posts/ultimas_atividades.html', {
-        'atividades': todas_atividades
+        'atividades': atividades,
+        'filtros_ativos': {
+            'tipo': tipo,
+            'prefixo': prefixo,
+            'tags': tags_usuario,
+            'autor': iniciada_por,
+            'ordem': tipo_organizacao,
+        },
+        'tipos_filtro': filtros['tipos_filtro'],
+        'tags_sistema_filtro': filtros['tags_sistema_filtro'],
+        'tags_populares': filtros['tags_populares'],
+        'tipos_organizacao': filtros['tipos_organizacao'],
+        'data_inicio': data_inicio,
+        'data_fim': data_fim,
+        'ordem_crescente': ordem_crescente,
     })
 
 def recent_threads(request):
@@ -94,34 +154,147 @@ def postagem_detail(request, categoria_slug, assunto_slug, postagem_id):
     return render(request, 'posts/detail.html', context)
 
 def threads(request):
-    """Lista todos os tópicos (threads) com filtros e ordenação por visualizações"""
-    threads_qs = Post.objects.filter(tipo='THREAD').select_related('autor', 'assunto')
-    # Filtros podem ser aplicados aqui usando request.GET
-    threads_qs = threads_qs.order_by('-visualizacoes')
-    paginator = Paginator(threads_qs, 20)
-    page = request.GET.get('page')
-    threads = paginator.get_page(page)
+    """Lista todos os tópicos (threads) com filtros"""
+    filtros = filtros_forum(request)
+    prefixo = request.GET.get('prefixo', '')
+    tags_usuario = request.GET.get('tags', '')
+    iniciada_por = request.GET.get('autor', '')
+    tipo_organizacao = request.GET.get('ordem', 'recente')
+    page = request.GET.get('page', 1)
+    data_inicio = request.GET.get('data_inicio', '')
+    data_fim = request.GET.get('data_fim', '')
+    ordem_crescente = request.GET.get('ordem_crescente', 'desc') == 'asc'
+
+    queryset = Post.objects.filter(tipo='THREAD')
+    if prefixo:
+        queryset = queryset.filter(tag_sistema__slug=prefixo)
+    if tags_usuario:
+        tags_list = [tag.strip() for tag in tags_usuario.split(',') if tag.strip()]
+        for tag in tags_list:
+            queryset = queryset.filter(tags_especificas__nome__icontains=tag)
+    if iniciada_por:
+        queryset = queryset.filter(autor__username__icontains=iniciada_por)
+    if data_inicio:
+        try:
+            from datetime import datetime
+            data_inicio_dt = datetime.strptime(data_inicio, "%Y-%m-%d")
+            queryset = queryset.filter(criado_em__date__gte=data_inicio_dt)
+        except Exception:
+            pass
+    if data_fim:
+        try:
+            from datetime import datetime
+            data_fim_dt = datetime.strptime(data_fim, "%Y-%m-%d")
+            queryset = queryset.filter(criado_em__date__lte=data_fim_dt)
+        except Exception:
+            pass
+
+    if tipo_organizacao == 'antigo':
+        queryset = queryset.order_by('criado_em' if ordem_crescente else '-criado_em')
+    elif tipo_organizacao == 'visualizacoes':
+        queryset = queryset.order_by('visualizacoes' if ordem_crescente else '-visualizacoes')
+    elif tipo_organizacao == 'atividade':
+        queryset = queryset.annotate(ultima_atividade=F('atualizado_em')).order_by('ultima_atividade' if ordem_crescente else '-ultima_atividade', 'criado_em' if ordem_crescente else '-criado_em')
+    else:
+        queryset = queryset.order_by('criado_em' if ordem_crescente else '-criado_em')
+
+    queryset = queryset.select_related('autor', 'assunto', 'tag_sistema').prefetch_related('tags_especificas')
+    paginator = Paginator(queryset, 20)
+    try:
+        threads = paginator.page(page)
+    except:
+        threads = paginator.page(1)
+
     return render(request, 'posts/list.html', {
         'objetos': threads,
         'titulo': 'Todos os Tópicos',
-        'tipo': 'thread'
+        'tipo': 'thread',
+        'filtros_ativos': {
+            'prefixo': prefixo,
+            'tags': tags_usuario,
+            'autor': iniciada_por,
+            'ordem': tipo_organizacao,
+        },
+        'tipos_filtro': filtros['tipos_filtro'],
+        'tags_sistema_filtro': filtros['tags_sistema_filtro'],
+        'tags_populares': filtros['tags_populares'],
+        'tipos_organizacao': filtros['tipos_organizacao'],
+        'data_inicio': data_inicio,
+        'data_fim': data_fim,
+        'ordem_crescente': ordem_crescente,
     })
 
 def posts(request):
-    """Lista todos os posts com filtros e ordenação por visualizações"""
-    posts_qs = Post.objects.filter(tipo='POST').select_related('autor', 'assunto')
-    # Filtros podem ser aplicados aqui usando request.GET
-    posts_qs = posts_qs.order_by('-visualizacoes')
-    paginator = Paginator(posts_qs, 20)
-    page = request.GET.get('page')
-    posts = paginator.get_page(page)
+    """Lista todos os posts com filtros"""
+    filtros = filtros_forum(request)
+    prefixo = request.GET.get('prefixo', '')
+    tags_usuario = request.GET.get('tags', '')
+    iniciada_por = request.GET.get('autor', '')
+    tipo_organizacao = request.GET.get('ordem', 'recente')
+    page = request.GET.get('page', 1)
+    data_inicio = request.GET.get('data_inicio', '')
+    data_fim = request.GET.get('data_fim', '')
+    ordem_crescente = request.GET.get('ordem_crescente', 'desc') == 'asc'
+
+    queryset = Post.objects.filter(tipo='POST')
+    if prefixo:
+        queryset = queryset.filter(tag_sistema__slug=prefixo)
+    if tags_usuario:
+        tags_list = [tag.strip() for tag in tags_usuario.split(',') if tag.strip()]
+        for tag in tags_list:
+            queryset = queryset.filter(tags_especificas__nome__icontains=tag)
+    if iniciada_por:
+        queryset = queryset.filter(autor__username__icontains=iniciada_por)
+    if data_inicio:
+        try:
+            from datetime import datetime
+            data_inicio_dt = datetime.strptime(data_inicio, "%Y-%m-%d")
+            queryset = queryset.filter(criado_em__date__gte=data_inicio_dt)
+        except Exception:
+            pass
+    if data_fim:
+        try:
+            from datetime import datetime
+            data_fim_dt = datetime.strptime(data_fim, "%Y-%m-%d")
+            queryset = queryset.filter(criado_em__date__lte=data_fim_dt)
+        except Exception:
+            pass
+
+    if tipo_organizacao == 'antigo':
+        queryset = queryset.order_by('criado_em' if ordem_crescente else '-criado_em')
+    elif tipo_organizacao == 'visualizacoes':
+        queryset = queryset.order_by('visualizacoes' if ordem_crescente else '-visualizacoes')
+    elif tipo_organizacao == 'atividade':
+        queryset = queryset.annotate(ultima_atividade=F('atualizado_em')).order_by('ultima_atividade' if ordem_crescente else '-ultima_atividade', 'criado_em' if ordem_crescente else '-criado_em')
+    else:
+        queryset = queryset.order_by('criado_em' if ordem_crescente else '-criado_em')
+
+    queryset = queryset.select_related('autor', 'assunto', 'tag_sistema').prefetch_related('tags_especificas')
+    paginator = Paginator(queryset, 20)
+    try:
+        posts = paginator.page(page)
+    except:
+        posts = paginator.page(1)
+
     return render(request, 'posts/list.html', {
         'objetos': posts,
         'titulo': 'Todos os Posts',
-        'tipo': 'post'
+        'tipo': 'post',
+        'filtros_ativos': {
+            'prefixo': prefixo,
+            'tags': tags_usuario,
+            'autor': iniciada_por,
+            'ordem': tipo_organizacao,
+        },
+        'tipos_filtro': filtros['tipos_filtro'],
+        'tags_sistema_filtro': filtros['tags_sistema_filtro'],
+        'tags_populares': filtros['tags_populares'],
+        'tipos_organizacao': filtros['tipos_organizacao'],
+        'data_inicio': data_inicio,
+        'data_fim': data_fim,
+        'ordem_crescente': ordem_crescente,
     })
-
-# Lógica para depois
+# ...existing code...
 @login_required
 def add_reply(request, categoria_slug, assunto_slug, thread_id):
     """View para adicionar uma resposta a uma thread"""

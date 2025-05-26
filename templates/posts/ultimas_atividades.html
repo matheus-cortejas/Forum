@@ -7,6 +7,21 @@
     <div class="navigate">
         <span><a href="{% url 'home' %}">MyForum - Forums</a> >> <a href="">Últimas Atividades</a></span>
     </div>
+    <!-- Painel de Filtros -->
+    {% include 'forum/partials/filtro.html' %}
+    <!-- Informações dos Filtros Ativos -->
+    {% if filtros_ativos.tipo != 'all' or filtros_ativos.prefixo or filtros_ativos.tags or filtros_ativos.autor or filtros_ativos.ordem != 'recente' %}
+    <div class="filter-results-info">
+        <p>Filtros ativos:
+            {% if filtros_ativos.tipo and filtros_ativos.tipo != 'all' %} <b>Tipo:</b> {{ filtros_ativos.tipo }} {% endif %}
+            {% if filtros_ativos.prefixo %} <b>Prefixo:</b> {{ filtros_ativos.prefixo }} {% endif %}
+            {% if filtros_ativos.tags %} <b>Tags:</b> {{ filtros_ativos.tags }} {% endif %}
+            {% if filtros_ativos.autor %} <b>Autor:</b> {{ filtros_ativos.autor }} {% endif %}
+            {% if filtros_ativos.ordem and filtros_ativos.ordem != 'recente' %} <b>Ordem:</b> {{ filtros_ativos.ordem }} {% endif %}
+            <a href="?" class="filter-clear-all">Limpar filtros</a>
+        </p>
+    </div>
+    {% endif %}
     <!--Display posts table-->
     <div class="posts-table">
         <div class="table-head">

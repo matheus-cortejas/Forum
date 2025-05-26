@@ -88,6 +88,32 @@
             </div>
         </div>
 
+        <!-- Período de Tempo (Data) -->
+        <div class="filter-group">
+            <label class="filter-label">
+                <i class="fas fa-calendar-alt"></i>
+                Período
+            </label>
+            <div class="filter-input-wrapper">
+                <input type="date" name="data_inicio" class="filter-input" value="{{ data_inicio|default:'' }}">
+                <span style="margin: 0 5px;">até</span>
+                <input type="date" name="data_fim" class="filter-input" value="{{ data_fim|default:'' }}">
+            </div>
+        </div>
+        <!-- Ordenação Crescente/Decrescente -->
+        <div class="filter-group">
+            <label class="filter-label">
+                <i class="fas fa-sort-amount-up-alt"></i>
+                Ordem
+            </label>
+            <div class="filter-select-wrapper">
+                <select name="ordem_crescente" class="filter-select">
+                    <option value="desc" {% if not ordem_crescente %}selected{% endif %}>Decrescente</option>
+                    <option value="asc" {% if ordem_crescente %}selected{% endif %}>Crescente</option>
+                </select>
+            </div>
+        </div>
+
         <!-- Tipo de Organização -->
         <div class="filter-group">
             <label class="filter-label">
