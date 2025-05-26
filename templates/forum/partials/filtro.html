@@ -1,0 +1,197 @@
+<!-- Painel de Filtros -->
+<div class="filter-panel" id="filterPanel">
+    <div class="filter-header">
+        <h3>
+            <i class="fas fa-filter"></i>
+            Filtros
+        </h3>
+        <button type="button" class="btn-close-filter" onclick="toggleFilterPanel()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
+    <form method="GET" id="filterForm" class="filter-form">
+        <!-- Tipo de Conteúdo -->
+        <div class="filter-group">
+            <label class="filter-label">
+                <i class="fas fa-layer-group"></i>
+                Tipo de Conteúdo
+            </label>
+            <div class="filter-options">
+                {% for tipo in tipos_filtro %}
+                <label class="filter-option">
+                    <input type="radio" name="tipo" value="{{ tipo.value }}" 
+                           {% if request.GET.tipo == tipo.value or not request.GET.tipo and tipo.value == 'all' %}checked{% endif %}>
+                    <span class="filter-option-text">{{ tipo.label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>        <!-- Tags do Sistema (Prefixos) -->
+        <div class="filter-group">
+            <label class="filter-label">
+                <i class="fas fa-tags"></i>
+                Prefixo (Tag do Sistema)
+            </label>
+            <div class="filter-select-wrapper">
+                <select name="prefixo" class="filter-select">
+                    <option value="">Todos os prefixos</option>
+                    {% for tag in tags_sistema_filtro %}
+                    <option value="{{ tag.slug }}" 
+                            {% if request.GET.prefixo == tag.slug %}selected{% endif %}>
+                        {{ tag.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>        <!-- Tags Específicas -->
+        <div class="filter-group">
+            <label class="filter-label">
+                <i class="fas fa-hashtag"></i>
+                Tags Específicas
+            </label>
+            <div class="filter-input-wrapper">
+                <input type="text" 
+                       name="tags" 
+                       class="filter-input"
+                       placeholder="Digite tags separadas por vírgula..."
+                       value="{{ request.GET.tags }}">
+                <small class="filter-help">Exemplo: python, django, web</small>
+                
+                {% if tags_populares %}
+                <div class="popular-tags">
+                    <small>Tags populares:</small>
+                    <div class="tags-cloud">
+                        {% for tag in tags_populares %}
+                        <span class="tag-item" onclick="addTagToFilter('{{ tag.nome }}')">
+                            #{{ tag.nome }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Autor -->
+        <div class="filter-group">
+            <label class="filter-label">
+                <i class="fas fa-user"></i>
+                Iniciadas por
+            </label>
+            <div class="filter-input-wrapper">
+                <input type="text" 
+                       name="autor" 
+                       class="filter-input"
+                       placeholder="Nome do usuário..."
+                       value="{{ request.GET.autor }}">
+                <small class="filter-help">Digite parte do nome do usuário</small>
+            </div>
+        </div>
+
+        <!-- Tipo de Organização -->
+        <div class="filter-group">
+            <label class="filter-label">
+                <i class="fas fa-sort"></i>
+                Ordenar por
+            </label>
+            <div class="filter-select-wrapper">
+                <select name="ordem" class="filter-select">
+                    {% for tipo in tipos_organizacao %}
+                    <option value="{{ tipo.value }}" 
+                            {% if request.GET.ordem == tipo.value or not request.GET.ordem and tipo.value == 'recente' %}selected{% endif %}>
+                        {{ tipo.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary btn-filter">
+                <i class="fas fa-search"></i>
+                Aplicar Filtros
+            </button>
+            <button type="button" class="btn btn-secondary btn-clear" onclick="clearFilters()">
+                <i class="fas fa-times"></i>
+                Limpar
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Botão para mostrar filtros (quando oculto) -->
+<div class="filter-toggle" id="filterToggle">
+    <button type="button" class="btn btn-outline-primary" onclick="toggleFilterPanel()">
+        <i class="fas fa-filter"></i>
+        Mostrar Filtros        {% if request.GET.tipo or request.GET.prefixo or request.GET.tags or request.GET.autor or request.GET.ordem %}
+        <span class="filter-active-indicator"></span>
+        {% endif %}
+    </button>
+</div>
+
+<script>
+function toggleFilterPanel() {
+    const panel = document.getElementById('filterPanel');
+    const toggle = document.getElementById('filterToggle');
+    
+    if (panel.style.display === 'none' || panel.style.display === '') {
+        panel.style.display = 'block';
+        toggle.style.display = 'none';
+    } else {
+        panel.style.display = 'none';
+        toggle.style.display = 'block';
+    }
+}
+
+function clearFilters() {
+    // Limpar todos os campos do formulário
+    document.getElementById('filterForm').reset();
+    
+    // Marcar "Tudo" como selecionado
+    const allOption = document.querySelector('input[name="tipo"][value="all"]');
+    if (allOption) allOption.checked = true;
+    
+    // Marcar "Mais Recentes" como selecionado
+    const recentOption = document.querySelector('select[name="ordem"] option[value="recente"]');
+    if (recentOption) recentOption.selected = true;
+    
+    // Redirecionar sem parâmetros de filtro
+    window.location.href = window.location.pathname;
+}
+
+function addTagToFilter(tagName) {
+    const tagsInput = document.querySelector('input[name="tags"]');
+    const currentTags = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
+    
+    // Verificar se a tag já está na lista
+    if (!currentTags.includes(tagName)) {
+        if (currentTags.length > 0) {
+            tagsInput.value = currentTags.join(', ') + ', ' + tagName;
+        } else {
+            tagsInput.value = tagName;
+        }
+    }
+    
+    // Focar no input para melhor UX
+    tagsInput.focus();
+}
+
+// Inicializar estado do painel baseado nos filtros ativos
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasActiveFilters = urlParams.has('tipo') && urlParams.get('tipo') !== 'all' ||
+                            urlParams.has('prefixo') ||
+                            urlParams.has('tags') ||
+                            urlParams.has('autor') ||
+                            (urlParams.has('ordem') && urlParams.get('ordem') !== 'recente');
+    
+    if (hasActiveFilters) {
+        document.getElementById('filterPanel').style.display = 'block';
+        document.getElementById('filterToggle').style.display = 'none';
+    } else {
+        document.getElementById('filterPanel').style.display = 'none';
+        document.getElementById('filterToggle').style.display = 'block';
+    }
+});
+</script>

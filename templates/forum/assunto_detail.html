@@ -11,20 +11,30 @@
                 <p class="descricao">{{ assunto.descricao }}</p>
             </div>
 
-            <!-- Filtros e Navegação -->
-            <div class="navigation-bar">
-                <div class="filters">
-                    <a href="{% url 'recent_threads' %}" class="filter-link">Novos Tópicos</a>
-                    <a href="#" class="filter-link">Filtros</a>
-                </div>
-                {% if user.is_authenticated %}
-                <div class="actions">
-                    <a href="#" class="btn btn-primary">Novo Tópico</a>
-                </div>
-                {% endif %}
-            </div>
+            <!-- Sistema de Filtros -->
+            {% include 'forum/partials/filtro.html' %}
 
+            <!-- Informações dos Resultados -->
+            {% if total_resultados %}
+            <div class="filter-results-info">
+                <p>
+                    Mostrando <span class="filter-results-count">{{ total_resultados }}</span>
+                    {% if total_resultados == 1 %}
+                        resultado
+                    {% else %}
+                        resultados
+                    {% endif %} <!-- DEBUG: if total_resultados == 1 -->
+                    {% if filtros_ativos.tipo != 'all' or filtros_ativos.prefixo or filtros_ativos.tags or filtros_ativos.autor or filtros_ativos.ordem != 'recente' %}
+                        com filtros aplicados
+                        <a href="{% url 'assunto_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug %}" class="filter-clear-all">
+                            (limpar filtros)
+                        </a>
+                    {% endif %} <!-- DEBUG: if filtros_ativos... -->
+                </p>
+            </div>
+            {% endif %} <!-- DEBUG: if total_resultados -->
             <!-- Tópicos Fixos -->
+            {% if threads_fixas %}
             <div class="subforum">
                 <div class="subforum-title">
                     <h2>Tópicos Fixos</h2>
@@ -37,9 +47,10 @@
                     <div class="subforum-description subforum-column">
                         <h4>
                             {% if thread.tag_sistema %}
-                            <span class="thread-tag" style="background-color: {{ thread.tag_sistema.cor }}; color: #fff;">
+                            <span class="thread-tag"
+                                style="background-color: {{ thread.tag_sistema.cor }}; color: #fff;">
                                 [{{ thread.tag_sistema.nome }}]</span>
-                            {% endif %}
+                            {% endif %} <!-- DEBUG: if thread.tag_sistema -->
                             <a
                                 href="{% url 'thread_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug thread_id=thread.id %}">
                                 {{ thread.titulo }}
@@ -51,134 +62,167 @@
                         </div>
                     </div>
                     <div class="subforum-stats subforum-column center">
-                        <span>Respostas: {{ thread.respostas_count }} | Views: {{ thread.visualizacoes }}</span>
+                        <span>Respostas: {{ thread.replies.count }} | Views: {{ thread.visualizacoes }}</span>
                     </div>
                     <div class="subforum-info subforum-column">
                         <span class="last-post-date">{{ thread.atualizado_em|date:"d/m/Y H:i" }}</span>
-                        <span class="last-post-author">por {{ thread.ultimo_autor }}</span>
+                        <span class="last-post-author">por {{ thread.autor.username }}</span>
                     </div>
                 </div>
                 {% if not forloop.last %}
-                <hr class="subforum-devider">{% endif %}
-                {% endfor %}
-
-                {% if not threads_fixas %}
-                <div class="no-threads">
-                    <p>Nenhum tópico fixo encontrado neste assunto.</p>
-                </div>
-                {% endif %}
+                <hr class="subforum-devider">{% endif %} <!-- DEBUG: if not forloop.last -->
+                {% endfor %} <!-- DEBUG: for thread in threads_fixas -->
             </div>
+            {% endif %} <!-- DEBUG: if threads_fixas -->
 
-            <!-- Tópicos Normais -->
+            <!-- Resultados dos Filtros -->
             <div class="subforum">
                 <div class="subforum-title">
-                    <h2>Tópicos normais</h2>
+                    <h2>
+                        {% if filtros_ativos.tipo == 'thread' %}
+                        Threads
+                        {% elif filtros_ativos.tipo == 'post' %}
+                        Posts
+                        {% else %}
+                        Threads e Posts
+                        {% endif %} <!-- DEBUG: if filtros_ativos.tipo -->
+                    </h2>
                 </div>
-                {% for thread in threads_normais %}
+
+                {% if postagens %}
+                {% for item in postagens %}
                 <div class="subforum-row">
                     <div class="subforum-icon subforum-column center">
+                        {% if item.tipo == 'THREAD' %}
                         <i class="fa fa-comment"></i>
-                    </div>
-                    <div class="subforum-description subforum-column">
-                        <h4>
-                            {% if thread.tag_sistema %}
-                            <span class="thread-tag" style="background-color: {{ thread.tag_sistema.cor }}; color: #fff;">
-                                [{{ thread.tag_sistema.nome }}]</span>
-                            {% endif %}
-                            <a
-                                href="{% url 'thread_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug thread_id=thread.id %}">
-                                {{ thread.titulo }}
-                            </a>
-                        </h4>
-                        <div class="thread-meta">
-                            <span class="author">{{ thread.autor.username }}</span>
-                            <span class="date">{{ thread.criado_em|date:"d/m/Y" }}</span>
-                        </div>
-                    </div>
-                    <div class="subforum-stats subforum-column center">
-                        <span>Respostas: {{ thread.respostas_count }} | Views: {{ thread.visualizacoes }}</span>
-                    </div>
-                    <div class="subforum-info subforum-column">
-                        <span class="last-post-date">{{ thread.atualizado_em|date:"d/m/Y H:i" }}</span>
-                        <span class="last-post-author">por {{ thread.ultimo_autor }}</span>
-                    </div>
-                </div>
-                {% if not forloop.last %}
-                <hr class="subforum-devider">{% endif %}
-                {% endfor %}
-
-                {% if not threads_normais %}
-                <div class="no-threads">
-                    <p>Nenhum tópico encontrado neste assunto.</p>
-                </div>
-                {% endif %}
-
-                <!-- Paginação -->
-                {% if threads_normais.has_other_pages %}
-                <div class="pagination">
-                    {% if threads_normais.has_previous %}
-                    <a href="?page={{ threads_normais.previous_page_number }}">&laquo; Anterior</a>
-                    {% endif %}
-
-                    {% for num in threads_normais.paginator.page_range %}
-                    {% if threads_normais.number == num %}
-                    <span class="current">{{ num }}</span>
-                    {% else %}
-                    <a href="?page={{ num }}">{{ num }}</a>
-                    {% endif %}
-                    {% endfor %}
-
-                    {% if threads_normais.has_next %}
-                    <a href="?page={{ threads_normais.next_page_number }}">Próximo &raquo;</a>
-                    {% endif %}
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Posts Normais -->
-            <div class="subforum">
-                <div class="subforum-title">
-                    <h2>Posts Normais</h2>
-                </div>
-                {% for post in ultimos_posts %}
-                <div class="subforum-row">
-                    <div class="subforum-icon subforum-column center">
+                        {% else %}
                         <i class="fa fa-reply"></i>
+                        {% endif %} <!-- DEBUG: if item.tipo == 'THREAD' -->
                     </div>
                     <div class="subforum-description subforum-column">
                         <h4>
-                            {% if post.tag_sistema %}
-                            <span class="thread-tag" style="background-color: {{ post.tag_sistema.cor }}; color: #fff;">
-                                [{{ post.tag_sistema.nome }}]</span>
-                            {% endif %}
-                            <a
-                                href="{% url 'post_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug post_id=post.id %}">
-                                {{ post.titulo }}
+                            {% if item.tag_sistema %}
+                            <span class="thread-tag" style="background-color: {{ item.tag_sistema.cor }}; color: #fff;">
+                                [{{ item.tag_sistema.nome }}]</span>
+                            {% endif %} <!-- DEBUG: if item.tag_sistema -->
+
+                            {% if item.tags_especificas.exists %}
+                            {% for tag in item.tags_especificas.all %}
+                            <span class="thread-tag" style="background-color: #6c757d; color: #fff;">
+                                #{{ tag.nome }}</span>
+                            {% endfor %} <!-- DEBUG: for tag in item.tags_especificas.all -->
+                            {% endif %} <!-- DEBUG: if item.tags_especificas.exists -->
+
+                            <a href="{% if item.tipo == 'THREAD' %}
+                                        {% url 'thread_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug thread_id=item.id %}
+                                     {% else %}
+                                       {% url 'post_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug post_id=item.id %}
+                                     {% endif %}">
+                                {{ item.titulo }}
                             </a>
+
+                            {% if item.tipo == 'THREAD' and item.fechado %}
+                            <i class="fa fa-lock" title="Tópico fechado"></i>
+                            {% endif %} <!-- DEBUG: if item.tipo == 'THREAD' and item.fechado -->
                         </h4>
-                        <div class="post-preview">{{ post.conteudo|truncatewords:30 }}</div>
+
+                        {% if item.tipo == 'POST' %}
+                        <div class="post-preview">{{ item.conteudo|truncatewords:30 }}</div>
+                        {% endif %} <!-- DEBUG: if item.tipo == 'POST' -->
+
                         <div class="thread-meta">
-                            <span class="author">{{ post.autor.username }}</span>
-                            <span class="date">{{ post.criado_em|date:"d/m/Y" }}</span>
+                            <span class="author">{{ item.autor.username }}</span>
+                            <span class="date">{{ item.criado_em|date:"d/m/Y H:i" }}</span>
+                            <span class="tipo">{{ item.get_tipo_display }}</span>
                         </div>
                     </div>
                     <div class="subforum-stats subforum-column center">
-                        <span>{{ post.criado_em|date:"d/m/Y" }}</span>
+                        {% if item.tipo == 'THREAD' %}
+                        <span>Respostas: {{ item.replies.count }} | Views: {{ item.visualizacoes }}</span>
+                        {% else %}
+                        <span>{{ item.criado_em|date:"d/m/Y" }}</span>
+                        {% endif %} <!-- DEBUG: if item.tipo == 'THREAD' -->
                     </div>
                     <div class="subforum-info subforum-column">
-                        <span class="last-post-author">por {{ post.autor.username }}</span>
+                        <span class="last-post-date">{{ item.atualizado_em|date:"d/m/Y H:i" }}</span>
+                        <span class="last-post-author">por {{ item.autor.username }}</span>
                     </div>
                 </div>
                 {% if not forloop.last %}
-                <hr class="subforum-devider">{% endif %}
-                {% endfor %}
+                <hr class="subforum-devider">{% endif %} <!-- DEBUG: if not forloop.last -->
+                {% endfor %} <!-- DEBUG: for item in postagens -->
 
-                {% if not ultimos_posts %}
-                <div class="no-posts">
-                    <p>Nenhuma resposta encontrada neste assunto.</p>
+                <!-- Paginação com Filtros -->
+                {% if postagens.has_other_pages %}
+                <div class="pagination-with-filters">
+                    <div class="pagination-info">
+                        Página {{ postagens.number }} de {{ postagens.paginator.num_pages }}
+                        ({{ postagens.paginator.count }} itens no total)
+                    </div>
+                    <div class="pagination">
+                        {% if postagens.has_previous %}
+                        <a
+                            href="?page={{ postagens.previous_page_number }}{% if filtros_query_string %}&{{ filtros_query_string }}{% endif %}">&laquo;
+                            Anterior</a>
+                        {% endif %} <!-- DEBUG: if postagens.has_previous -->
+
+                        {% for num in postagens.paginator.page_range %}
+                        {% if postagens.number == num %}
+                        <span class="current">{{ num }}</span>
+                        {% elif num > postagens.number|add:'-3' and num < postagens.number|add:'3' %} <a
+                            href="?page={{ num }}{% if filtros_query_string %}&{{ filtros_query_string }}{% endif %}">{{
+                            num }}</a>
+                            {% endif %} <!-- DEBUG: if postagens.number == num / elif ... -->
+                            {% endfor %} <!-- DEBUG: for num in postagens.paginator.page_range -->
+
+                            {% if postagens.has_next %}
+                            <a
+                                href="?page={{ postagens.next_page_number }}{% if filtros_query_string %}&{{ filtros_query_string }}{% endif %}">Próximo
+                                &raquo;</a>
+                            {% endif %} <!-- DEBUG: if postagens.has_next -->
+                    </div>
                 </div>
-                {% endif %}
+                {% endif %} <!-- DEBUG: if postagens.has_other_pages -->
+                {% else %}
+                <div class="filter-no-results">
+                    <i class="fa fa-search"></i>
+                    <p>Nenhum resultado encontrado com os filtros aplicados.</p>
+                    <a href="{% url 'assunto_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug %}"
+                        class="filter-clear-all">
+                        Limpar filtros e ver todos os resultados
+                    </a>
+                </div>
+                {% endif %} <!-- DEBUG: if postagens -->
             </div>
+        </div>
+    </div>
+
+    <!-- Sidebar com Últimos Posts -->
+    <div class="forum-sidebar">
+        <div class="sidebar-widget">
+            <h3>Últimos Posts</h3>
+            {% if ultimos_posts %}
+            {% for post in ultimos_posts %}
+            <div class="recent-post">
+                <h5>
+                    {% if post.tag_sistema %}
+                    <span class="thread-tag" style="background-color: {{ post.tag_sistema.cor }}; color: #fff;">
+                        [{{ post.tag_sistema.nome }}]</span>
+                    {% endif %} <!-- DEBUG: if post.tag_sistema -->
+                    <a
+                        href="{% url 'post_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug post_id=post.id %}">
+                        {{ post.titulo|truncatechars:50 }}
+                    </a>
+                </h5>
+                <div class="post-meta">
+                    <span class="author">{{ post.autor.username }}</span>
+                    <span class="date">{{ post.criado_em|date:"d/m H:i" }}</span>
+                </div>
+            </div>
+            {% endfor %} <!-- DEBUG: for post in ultimos_posts -->
+            {% else %}
+            <p>Nenhum post recente encontrado.</p>
+            {% endif %} <!-- DEBUG: if ultimos_posts -->
         </div>
     </div>
 </div>
