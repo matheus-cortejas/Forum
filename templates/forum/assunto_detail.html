@@ -126,22 +126,15 @@
                             {% endif %} <!-- DEBUG: if item.tipo == 'THREAD' and item.fechado -->
                         </h4>
 
-                        {% if item.tipo == 'POST' %}
-                        <div class="post-preview">{{ item.conteudo|truncatewords:30 }}</div>
-                        {% endif %} <!-- DEBUG: if item.tipo == 'POST' -->
-
+ 
                         <div class="thread-meta">
                             <span class="author">{{ item.autor.username }}</span>
                             <span class="date">{{ item.criado_em|date:"d/m/Y H:i" }}</span>
                             <span class="tipo">{{ item.get_tipo_display }}</span>
                         </div>
                     </div>
-                    <div class="subforum-stats subforum-column center">
-                        {% if item.tipo == 'THREAD' %}
+                    <div class="subforum-stats subforum-column center">                       
                         <span>Respostas: {{ item.replies.count }} | Views: {{ item.visualizacoes }}</span>
-                        {% else %}
-                        <span>{{ item.criado_em|date:"d/m/Y" }}</span>
-                        {% endif %} <!-- DEBUG: if item.tipo == 'THREAD' -->
                     </div>
                     <div class="subforum-info subforum-column">
                         <span class="last-post-date">{{ item.atualizado_em|date:"d/m/Y H:i" }}</span>
