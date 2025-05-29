@@ -2,5 +2,181 @@
 {% load static %}
 
 {% block content %}
-<h1>Lógica de membros</h1>
+<div class="forum-wrapper">
+    <aside class="forum-sidebar members-sidebar">
+        <div class="sidebar-section">
+            <div class="section-header">
+                <h3>Membros</h3>
+            </div>
+            <div class="section-content p-0">
+                <ul class="members-list-nav">
+                    <li class="trending-item active">
+                        <a href="{% url 'members' %}">Overview</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=mais_mensagens">Mais mensagens</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=mais_hoje">Mais mensagens hoje</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=mais_mes">Mais mensagens este mês</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=mais_semana">Mais mensagens esta semana</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=aniversariantes">Aniversariantes</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=mais_reacoes">Maior pontuação de reação</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=mais_solucoes">Mais soluções</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=staff">Membros do staff</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=moderadores">Moderadores</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!-- Busca de membros -->
+        <div class="sidebar-section">
+            <div class="section-header">
+                <h3>Encontrar membro</h3>
+            </div>
+            <div class="section-content">
+                <form method="get" action="/accounts/members/">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="busca" placeholder="Nome de usuário..." value="">
+                        <button class="btn-search" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Novos membros -->
+        <div class="sidebar-section">
+            <div class="section-header">
+                <h3>Novos membros</h3>
+            </div>
+            <div class="section-content">
+                <div class="no-members">
+                    <p class="text-muted">Nenhum novo membro ainda</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+    <main class="forum-main members-main">
+        <div class="container">
+            <div class="header">
+                <h1>Membros Notavéis</h1>
+            </div>
+            <div class="members-tables">
+                <section class="members-table">
+                    <h2>Mais mensagens</h2>
+                    <ul>
+                        <li>
+                            <span class="avatar"></span>
+                            <span class="username">Usuário1</span>
+                            <span class="stat">178,851</span>
+                        </li>
+                        <li>
+                            <span class="avatar"></span>
+                            <span class="username">Usuário2</span>
+                            <span class="stat">128,807</span>
+                        </li>
+                        <!-- ... -->
+                    </ul>
+                </section>
+                <section class="members-table">
+                    <h2>Mais mensagens hoje</h2>
+                    <ul>
+                        <li>
+                            <span class="avatar"></span>
+                            <span class="username">Usuário3</span>
+                            <span class="stat">12</span>
+                        </li>
+                        <!-- ... -->
+                    </ul>
+                </section>
+                <section class="members-table">
+                    <h2>Maior pontuação de reação</h2>
+                    <ul>
+                        <li>
+                            <span class="avatar"></span>
+                            <span class="username">Usuário4</span>
+                            <span class="stat">21,571</span>
+                        </li>
+                        <!-- ... -->
+                    </ul>
+                </section>
+                <section class="members-table">
+                    <h2>Mais mensagens este mês</h2>
+                    <ul>
+                        <li>
+                            <span class="avatar"></span>
+                            <span class="username">Usuário4</span>
+                            <span class="stat">409</span>
+                        </li>
+                    </ul>
+                </section>
+                <section class="members-table">
+                    <h2>Mais mensagens esta semana</h2>
+                    <ul>
+                        <li>
+                            <span class="avatar"></span>
+                            <span class="username">Usuário5</span>
+                            <span class="stat">32</span>
+                        </li>
+                    </ul>
+                </section>
+                <section class="members-table">
+                    <h2>Aniversariantes</h2>
+                    <ul>
+                        <li>
+                            <span class="avatar"></span>
+                            <span class="username">Usuário6</span>
+                            <span class="stat">215</span>
+                        </li>
+                    </ul>
+                </section>
+                <section class="members-table">
+                    <h2>Mais soluções</h2>
+                    <ul>
+                        <li>
+                            <span class="avatar"></span>
+                            <span class="username">Usuário8</span>
+                            <span class="stat">25,206</span>
+                        </li>
+                    </ul>
+                </section>
+                <section class="members-table">
+                    <h2>Membros do staff</h2>
+                    <ul>
+                        <li>
+                            <span class="avatar"></span>
+                            <span class="username">Usuário9</span>
+                            <span class="stat">Staff</span>
+                        </li>
+                    </ul>
+                </section>
+                <section class="members-table">
+                    <h2>Moderadores</h2>
+                    <ul>
+                        <li>
+                            <span class="avatar"></span>
+                            <span class="username">Usuário10</span>
+                            <span class="stat">Moderador</span>
+                        </li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
 {% endblock %}

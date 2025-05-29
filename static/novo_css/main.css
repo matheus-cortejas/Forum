@@ -26,6 +26,8 @@
 @import url("06-components/detail.css");
 @import url("06-components/forum-info.css");
 @import url("06-components/sidebar.css");
+@import url("06-components/members.css");
+@import url("06-components/online.css");
 
 /* Utilities - Helper classes */
 @import url("07-utilities/helpers.css");

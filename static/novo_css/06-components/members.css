@@ -1,0 +1,182 @@
+/* Exclusivo para a página de membros */
+
+/* Sidebar de membros */
+.members-list-nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.members-list-nav .trending-item {
+    border-bottom: 1px solid var(--color-dark-3, #292b31);
+}
+.members-list-nav .trending-item:last-child {
+    border-bottom: none;
+}
+.members-list-nav a {
+    display: block;
+    padding: 12px 32px;
+    color: var(--color-text, #e0e0e0);
+    text-decoration: none;
+    font-size: 1rem;
+    transition: background 0.2s, color 0.2s;
+}
+.members-list-nav .active > a,
+.members-list-nav a:hover {
+    background: var(--color-dark-3, #292b31);
+    color: var(--color-primary, #e53935);
+}
+
+/* Busca de membros */
+.input-group {
+    display: flex;
+    margin: 16px 0;
+}
+.form-control {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px 0 0 4px;
+    background: #292b31;
+    color: #fff;
+}
+.btn-search {
+    background: var(--color-primary, #e53935);
+    color: #fff;
+    border: none;
+    padding: 0 16px;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+}
+.btn-search i {
+    font-size: 1rem;
+}
+
+/* Novos membros */
+.no-members {
+    text-align: center;
+    color: #888;
+    padding: 12px 0;
+}
+.text-muted {
+    color: #888;
+}
+
+/* Listagem de membros estilo Adrenaline/Tom's */
+.members-table {
+    width: 100%;
+    margin-top: 24px;
+    background: var(--color-dark-2, #232428);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.table-head {
+    display: flex;
+    background: var(--color-dark-3, #292b31);
+    color: var(--color-text, #fff);
+    font-weight: bold;
+    padding: 16px 32px;
+    font-size: 1rem;
+}
+.table-row.member-row {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--color-dark-3, #292b31);
+    padding: 24px 32px;
+    min-height: 90px;
+    background: transparent;
+    transition: background 0.2s;
+}
+.table-row.member-row:last-child {
+    border-bottom: none;
+}
+.member-main-col {
+    display: flex;
+    align-items: center;
+    flex: 1 1 260px;
+    min-width: 200px;
+    gap: 18px;
+}
+.member-avatar .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #35363b;
+    border: 2px solid var(--color-dark-3, #292b31);
+}
+.member-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.username .user-link {
+    color: var(--color-primary, #e53935);
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-decoration: none;
+}
+.username .user-link:hover {
+    text-decoration: underline;
+}
+.role {
+    font-size: 0.95rem;
+    color: #bbb;
+}
+.member-extra-col {
+    flex: 2 1 350px;
+    font-size: 1rem;
+    color: #bbb;
+    padding-left: 16px;
+    line-height: 1.5;
+}
+.stats span {
+    display: block;
+    margin-bottom: 2px;
+}
+.extra-info {
+    font-size: 0.95rem;
+    color: #888;
+    margin-top: 4px;
+}
+.member-count-col {
+    flex: 0 0 110px;
+    text-align: right;
+    font-size: 1.35rem;
+    font-weight: bold;
+    color: var(--color-primary, #e53935);
+}
+.count-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--color-primary, #e53935);
+}
+
+/* Responsividade */
+@media (max-width: 900px) {
+    .table-head, .table-row.member-row {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 8px;
+    }
+    .member-count-col {
+        align-self: flex-end;
+        margin-top: 8px;
+    }
+}
+@media (max-width: 700px) {
+    .member-row {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 14px 8px;
+    }
+    .member-avatar {
+        margin-bottom: 8px;
+    }
+    .member-count {
+        align-self: flex-end;
+        margin-top: 6px;
+    }
+}

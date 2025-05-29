@@ -2,5 +2,68 @@
 {% load static %}
 
 {% block content %}
-<h1>Lógica de online</h1>
+<div class="forum-wrapper">
+    <main class="forum-main online-main">
+        <div class="container" style="display: flex; gap: 32px;">
+            <!-- Lista de online -->
+            <div class="online-table" style="flex:2;">
+                <div class="online-tabs">
+                    <button class="tab active">Todos</button>
+                    <button class="tab">Membros</button>
+                    <button class="tab">Visitantes</button>
+                    <button class="tab">Robôs</button>
+                </div>
+                <div class="online-list">
+                    <!-- Exemplo de linha: -->
+                    <div class="online-row">
+                        <div class="online-avatar">
+                            <img src="{% static 'images/default-avatar.png' %}" alt="Avatar" class="avatar">
+                        </div>
+                        <div class="online-info">
+                            <span class="online-name"><b>Robô:</b> <span class="robot-name">Bing</span></span>
+                            <div class="online-action text-muted">Searching • 1 minuto atrás</div>
+                        </div>
+                    </div>
+                    <div class="online-row">
+                        <div class="online-avatar">
+                            <img src="{% static 'images/default-avatar.png' %}" alt="Avatar" class="avatar">
+                        </div>
+                        <div class="online-info">
+                            <span class="online-name"><b>Visitante</b></span>
+                            <div class="online-action text-muted">Visualizando o fórum <b>OFERTAS</b> • 1 minuto atrás</div>
+                        </div>
+                    </div>
+                    <div class="online-row">
+                        <div class="online-avatar">
+                            <img src="{% static 'images/default-avatar.png' %}" alt="Avatar" class="avatar">
+                        </div>
+                        <div class="online-info">
+                            <span class="online-name"><b>Visitante</b></span>
+                            <div class="online-action text-muted">Visualizando o tópico <span style="color:#e53935;">NVIDIA GeForce RTX 3XXX</span> • 1 minuto atrás</div>
+                        </div>
+                    </div>
+                    <!-- Adicione mais linhas fictícias conforme desejar -->
+                </div>
+            </div>
+            <!-- Estatísticas -->
+            <aside class="online-sidebar" style="flex:1; min-width:220px;">
+                <div class="sidebar-section">
+                    <div class="section-header">
+                        <h3>Online statistics</h3>
+                    </div>
+                    <div class="section-content">
+                        <div class="online-stats">
+                            <div>Membros Online: <b>101</b></div>
+                            <div>Visitantes Online: <b>455</b></div>
+                            <div>Total de Visitantes: <b>556</b></div>
+                            <div class="text-muted" style="font-size:0.95em; margin-top:8px;">
+                                O resultado final pode incluir visitantes ocultos.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+</div>
 {% endblock %}

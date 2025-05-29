@@ -1,0 +1,159 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="forum-wrapper">
+    <aside class="forum-sidebar members-sidebar">
+        <div class="sidebar-section">
+            <div class="section-header">
+                <h3>Membros</h3>
+            </div>
+            <div class="section-content p-0">
+                <ul class="members-list-nav">
+                    <li class="trending-item active">
+                        <a href="{% url 'members' %}">Overview</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=mais_mensagens">Mais mensagens</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=mais_hoje">Mais mensagens hoje</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=mais_mes">Mais mensagens este mês</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=mais_semana">Mais mensagens esta semana</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=aniversariantes">Aniversariantes</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=mais_reacoes">Maior pontuação de reação</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=mais_solucoes">Mais soluções</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=staff">Membros do staff</a>
+                    </li>
+                    <li class="trending-item">
+                        <a href="?tipo=moderadores">Moderadores</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!-- Busca de membros -->
+        <div class="sidebar-section">
+            <div class="section-header">
+                <h3>Encontrar membro</h3>
+            </div>
+            <div class="section-content">
+                <form method="get" action="/accounts/members/">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="busca" placeholder="Nome de usuário..." value="">
+                        <button class="btn-search" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Novos membros -->
+        <div class="sidebar-section">
+            <div class="section-header">
+                <h3>Novos membros</h3>
+            </div>
+            <div class="section-content">
+                <div class="no-members">
+                    <p class="text-muted">Nenhum novo membro ainda</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+    <main class="forum-main members-main">
+        <div class="container">
+            <div class="header">
+                <h1>Membros</h1>
+            </div>
+            <!-- Apenas o bloco da tabela de membros -->
+            <div class="members-table">
+                <div class="table-head">
+                    <div class="member-main-col">Membro</div>
+                    <div class="member-extra-col">Informações</div>
+                    <div class="member-count-col">Mensagens</div>
+                </div>
+
+                <div class="table-row member-row">
+                    <div class="member-main-col">
+                        <div class="member-avatar">
+                            <img class="avatar" src="{% static 'images/default-avatar.png' %}" alt="Avatar">
+                        </div>
+                        <div class="member-info">
+                            <div class="username"><a href="#" class="user-link">PELO</a></div>
+                            <div class="role text-muted">Titan</div>
+                        </div>
+                    </div>
+                    <div class="member-extra-col">
+                        <div class="stats">
+                            <span>Mensagens: <b>48,908</b></span><br>
+                            <span>Pontuação de Reações: <b>66,273</b></span><br>
+                            <span>Soluções: <b>45</b></span><br>
+                            <span class="extra-info text-muted">Rio de Janeiro</span>
+                        </div>
+                    </div>
+                    <div class="member-count-col">
+                        <span class="count-number">48,908</span>
+                    </div>
+                </div>
+
+                <div class="table-row member-row">
+                    <div class="member-main-col">
+                        <div class="member-avatar">
+                            <img class="avatar" src="{% static 'images/default-avatar.png' %}" alt="Avatar">
+                        </div>
+                        <div class="member-info">
+                            <div class="username"><a href="#" class="user-link">Leandro</a></div>
+                            <div class="role text-muted">Ex-moderador</div>
+                        </div>
+                    </div>
+                    <div class="member-extra-col">
+                        <div class="stats">
+                            <span>Mensagens: <b>43,799</b></span><br>
+                            <span>Pontuação de Reações: <b>29,032</b></span><br>
+                            <span>Soluções: <b>43</b></span><br>
+                            <span class="extra-info text-muted">São Paulo</span>
+                        </div>
+                    </div>
+                    <div class="member-count-col">
+                        <span class="count-number">43,799</span>
+                    </div>
+                </div>
+
+                <div class="table-row member-row">
+                    <div class="member-main-col">
+                        <div class="member-avatar">
+                            <img class="avatar" src="{% static 'images/default-avatar.png' %}" alt="Avatar">
+                        </div>
+                        <div class="member-info">
+                            <div class="username"><a href="#" class="user-link">Cata</a></div>
+                            <div class="role text-muted">Active Member</div>
+                        </div>
+                    </div>
+                    <div class="member-extra-col">
+                        <div class="stats">
+                            <span>Mensagens: <b>40,628</b></span><br>
+                            <span>Pontuação de Reações: <b>13,889</b></span><br>
+                            <span>Soluções: <b>41</b></span><br>
+                            <span class="extra-info text-muted">Curitiba</span>
+                        </div>
+                    </div>
+                    <div class="member-count-col">
+                        <span class="count-number">40,628</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
