@@ -299,13 +299,13 @@ def posts(request):
     })
 
 @login_required
-def add_reply(request, categoria_slug, assunto_slug, thread_id):
+def add_reply(request, categoria_slug, assunto_slug, postagem_id):
     """View para adicionar uma resposta a uma thread"""
     
-    thread = get_object_or_404(
+    # CORRIGIDO: usar postagem_id em vez de thread_id
+    postagem = get_object_or_404(
         Post,
-        id=thread_id,
-        tipo='THREAD',
+        id=postagem_id,
         assunto__slug=assunto_slug,
         assunto__categoria__slug=categoria_slug
     )
@@ -322,7 +322,7 @@ def add_reply(request, categoria_slug, assunto_slug, thread_id):
         else:
             try:
                 reply = Reply.objects.create(
-                    postagem=thread,
+                    postagem=postagem,
                     autor=request.user,
                     conteudo=conteudo
                 )
@@ -349,7 +349,16 @@ def add_reply(request, categoria_slug, assunto_slug, thread_id):
     return redirect('postagem_detail', 
                    categoria_slug=categoria_slug,
                    assunto_slug=assunto_slug,
-                   postagem_id=thread_id)
+                   postagem_id=postagem_id)
+
+def render_reply_html(reply, current_user):
+    """Função auxiliar para renderizar HTML de uma resposta"""
+    from django.template.loader import render_to_string
+    
+    return render_to_string('posts/partials/reply_item.html', {
+        'reply': reply,
+        'user': current_user
+    })
 
 @login_required
 @require_POST

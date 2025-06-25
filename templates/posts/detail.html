@@ -7,10 +7,11 @@
         <!-- Navegação breadcrumb -->
         <div class="navigate">
             <span>
-                <a href="{% url 'home' %}">Início</a> >> 
-                <a href="{% url 'assunto_detail' categoria_slug=postagem.assunto.categoria.slug assunto_slug=postagem.assunto.slug %}">
+                <a href="{% url 'home' %}">Início</a> >>
+                <a
+                    href="{% url 'assunto_detail' categoria_slug=postagem.assunto.categoria.slug assunto_slug=postagem.assunto.slug %}">
                     {{ postagem.assunto.nome }}
-                </a> >> 
+                </a> >>
                 {{ postagem.titulo }}
             </span>
         </div>
@@ -32,31 +33,31 @@
                         </a>
                     </div>
                     <div class="user-role">{{ postagem.autor.apelido|default:"Membro" }}</div>
-                    
+
                     {% if postagem.autor.avatar %}
-                        <img src="{{ postagem.autor.avatar.url }}" alt="Avatar" class="user-avatar">
+                    <img src="{{ postagem.autor.avatar.url }}" alt="Avatar" class="user-avatar">
                     {% else %}
-                        <img src="{% static 'images/default-avatar.png' %}" alt="Default Avatar" class="user-avatar">
+                    <img src="{% static 'images/default-avatar.png' %}" alt="Default Avatar" class="user-avatar">
                     {% endif %}
-                    
+
                     <div class="user-stats">
                         <div>Posts: <u>{{ postagem.autor.total_itens|default:"0" }}</u></div>
                         <div>Respostas: <u>{{ postagem.autor.answers|default:"0" }}</u></div>
                         <div>Reputação: <u>{{ postagem.autor.reputacao|default:"0" }}</u></div>
                     </div>
                 </div>
-                
+
                 <div class="content">
                     <div class="post-content">
                         {{ postagem.conteudo|linebreaks }}
                     </div>
-                    
+
                     <div class="post-meta">
                         <span class="post-date">{{ postagem.criado_em|date:"d/m/Y H:i" }}</span>
                         {% if postagem.atualizado_em != postagem.criado_em %}
-                            <span class="post-edited">
-                                (Editado em {{ postagem.atualizado_em|date:"d/m/Y H:i" }})
-                            </span>
+                        <span class="post-edited">
+                            (Editado em {{ postagem.atualizado_em|date:"d/m/Y H:i" }})
+                        </span>
                         {% endif %}
                     </div>
 
@@ -65,18 +66,18 @@
                         <button onclick="Reply.show()" class="btn btn-primary">
                             <i class="fa fa-reply"></i> Responder
                         </button>
-                        
+
                         {% if user == postagem.autor or user.is_staff %}
-                            <button onclick="Post.edit({{ postagem.id }})" class="btn btn-secondary">
-                                <i class="fa fa-edit"></i> Editar
-                            </button>
+                        <button onclick="Post.edit({{ postagem.id }})" class="btn btn-secondary">
+                            <i class="fa fa-edit"></i> Editar
+                        </button>
                         {% endif %}
-                        
+
                         <!-- Reações -->
                         <div class="reactions" id="reactions-container">
                             {% for reacao in reacoes %}
                             <button class="reaction {% if reacao.id == user_reaction.reacao.id %}active{% endif %}"
-                                    onclick="Reactions.toggle('{{ reacao.id }}')">
+                                onclick="Reactions.toggle('{{ reacao.id }}')">
                                 {{ reacao.nome }} ({{ reacao.count }})
                             </button>
                             {% endfor %}
@@ -94,19 +95,19 @@
                 <h3>Adicionar Resposta</h3>
                 <button onclick="Reply.hide()" class="btn-close">×</button>
             </div>
-            
-            <form method="post" action="{% url 'add_reply' postagem.assunto.categoria.slug postagem.assunto.slug postagem.id %}" 
-                  class="reply-form" id="reply-form">
+
+            <form method="post"
+                action="{% url 'add_reply' postagem.assunto.categoria.slug postagem.assunto.slug postagem.id %}"
+                class="reply-form" id="reply-form">
                 {% csrf_token %}
                 <div class="form-group">
-                    <textarea name="conteudo" id="reply-content" 
-                              placeholder="Escreva sua resposta aqui..." 
-                              rows="6" required minlength="10" maxlength="10000"></textarea>
+                    <textarea name="conteudo" id="reply-content" placeholder="Escreva sua resposta aqui..." rows="6"
+                        required minlength="10" maxlength="10000"></textarea>
                     <div class="char-counter">
                         <span id="char-count">0</span>/10000 caracteres
                     </div>
                 </div>
-                
+
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-paper-plane"></i> Enviar Resposta
@@ -124,14 +125,14 @@
         <div class="replies-section">
             <div class="replies-header">
                 <h3>
-                    <i class="fa fa-comments"></i> 
+                    <i class="fa fa-comments"></i>
                     <span id="replies-count">{{ replies.count }}</span> Resposta{{ replies.count|pluralize }}
                 </h3>
             </div>
-            
+
             <div class="replies-container" id="replies-container">
                 {% for reply in replies %}
-                    {% include 'posts/partials/reply_item.html' with reply=reply %}
+                {% include 'posts/partials/reply_item.html' with reply=reply %}
                 {% endfor %}
             </div>
         </div>
@@ -142,9 +143,9 @@
                 <h3>Nenhuma resposta ainda</h3>
                 <p>Seja o primeiro a responder esta thread!</p>
                 {% if user.is_authenticated %}
-                    <button onclick="Reply.show()" class="btn btn-primary">
-                        <i class="fa fa-reply"></i> Adicionar Primeira Resposta
-                    </button>
+                <button onclick="Reply.show()" class="btn btn-primary">
+                    <i class="fa fa-reply"></i> Adicionar Primeira Resposta
+                </button>
                 {% endif %}
             </div>
         </div>
