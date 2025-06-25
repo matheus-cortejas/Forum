@@ -1,0 +1,257 @@
+/* Formulário de resposta */
+.reply-form-container {
+    background: var(--color-dark-2);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 1px solid var(--color-dark-3);
+}
+
+.reply-form-container.hide {
+    display: none;
+}
+
+.reply-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--color-dark-3);
+}
+
+.reply-form-header h3 {
+    color: var(--color-text);
+    margin: 0;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-close:hover {
+    color: var(--color-text);
+}
+
+.reply-form textarea {
+    width: 100%;
+    min-height: 120px;
+    background: var(--color-dark-1);
+    border: 1px solid var(--color-dark-3);
+    border-radius: 4px;
+    color: var(--color-text);
+    padding: 12px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.char-counter {
+    text-align: right;
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+/* Lista de respostas */
+.replies-section {
+    margin-top: 30px;
+}
+
+.replies-header {
+    background: var(--color-dark-2);
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 1px solid var(--color-dark-3);
+}
+
+.replies-header h3 {
+    color: var(--color-text);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.replies-container {
+    background: var(--color-dark-2);
+    border-radius: 0 0 8px 8px;
+}
+
+/* Item de resposta */
+.reply-item {
+    display: flex;
+    padding: 20px;
+    border-bottom: 1px solid var(--color-dark-3);
+    gap: 20px;
+}
+
+.reply-item:last-child {
+    border-bottom: none;
+}
+
+.reply-author {
+    flex: 0 0 200px;
+    text-align: center;
+}
+
+.author-info {
+    margin-bottom: 10px;
+}
+
+.author-name {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.author-name:hover {
+    text-decoration: underline;
+}
+
+.author-role {
+    color: #999;
+    font-size: 0.9em;
+    margin-top: 2px;
+}
+
+.author-avatar {
+    margin: 15px 0;
+}
+
+.author-avatar .avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 2px solid var(--color-dark-3);
+}
+
+.author-stats {
+    text-align: left;
+    font-size: 0.9em;
+}
+
+.stat-item {
+    margin-bottom: 5px;
+    color: #ccc;
+}
+
+/* Conteúdo da resposta */
+.reply-content-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+.reply-content {
+    color: var(--color-text);
+    line-height: 1.6;
+    margin-bottom: 15px;
+    word-wrap: break-word;
+}
+
+.reply-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--color-dark-3);
+    font-size: 0.9em;
+    color: #999;
+}
+
+.reply-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-action {
+    background: none;
+    border: 1px solid var(--color-dark-3);
+    color: #999;
+    padding: 5px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-action:hover {
+    color: var(--color-text);
+    border-color: #777;
+}
+
+.btn-action.btn-danger:hover {
+    color: #ff5252;
+    border-color: #ff5252;
+}
+
+/* Estado vazio */
+.no-replies {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--color-dark-2);
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.no-replies-content {
+    color: #999;
+}
+
+.no-replies-content i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #555;
+}
+
+.no-replies-content h3 {
+    color: #ccc;
+    margin-bottom: 10px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .reply-item {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .reply-author {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        text-align: left;
+    }
+    
+    .author-avatar .avatar {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .author-stats {
+        display: flex;
+        gap: 15px;
+    }
+    
+    .reply-meta {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+}

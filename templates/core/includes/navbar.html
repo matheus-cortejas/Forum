@@ -50,7 +50,7 @@
                     <input type="text" name="q" placeholder="Pesquisar...">
                     <button type="submit">Buscar</button>
                 </form>
-                <div class="nav-item"><a href="{% url 'profile' %}">Perfil</a></div>           
+                <div class="nav-item"><a href="{% url 'profile' %}">Meu Perfil</a></div>           
                 <div class="nav-item"><a href="{% url 'logout' %}">Sair</a></div>
             {% else %}
                 <form action="{% url 'search' %}" method="GET" class="search-form">

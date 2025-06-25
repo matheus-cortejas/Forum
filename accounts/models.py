@@ -70,12 +70,12 @@ class Usuario(AbstractUser):
     total_itens = models.PositiveIntegerField(default=0, help_text="Total de mensagens, tópicos e conteúdos")
     reputacao = models.IntegerField(default=0, help_text="Pontuação de reações recebidas")
     answers = models.PositiveIntegerField(default=0, help_text="Número de respostas marcadas como solução")
-    dias_ganhos = models.PositiveIntegerField(default=0, help_text="Dias com prêmios ou recompensas")
+    # Removido: dias_ganhos
     
     # Timestamps
     cadastrado_em = models.DateTimeField(auto_now_add=True)
     ultimo_acesso = models.DateTimeField(null=True, blank=True)
-    
+      
     # Seguidores e estatísticas de perfil
     seguidores = models.ManyToManyField('self', symmetrical=False, related_name='seguindo', blank=True)
     

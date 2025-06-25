@@ -7,23 +7,40 @@
         <div class="profile-banner-bg"></div>
         <div class="profile-banner-content container">
             <div class="profile-avatar">
-                <img src="/static/images/default-avatar.png" alt="Avatar" class="avatar" />
+                {% if usuario.avatar %}
+                    <img src="{{ usuario.avatar.url }}" alt="Avatar" class="avatar" />
+                {% else %}
+                    <img src="{% static 'images/default-avatar.png' %}" alt="Avatar" class="avatar" />
+                {% endif %}
             </div>
             <div class="profile-user-info">
-                <h2 class="profile-username">jonathan viana</h2>
+                <h2 class="profile-username">{{ usuario.username }}</h2>
                 <div class="profile-role">
-                    <span class="user-link" style="color:#1976d2;">Membro</span>
+                    <span class="user-link" style="color:#1976d2;">
+                        {% if usuario.apelido %}
+                            {{ usuario.apelido }}
+                        {% else %}
+                            Membro
+                        {% endif %}
+                    </span>
                 </div>
                 <div class="profile-meta">
-                    <span class="profile-meta-item">Entrou em 03/02/2012</span>
-                    <span class="profile-meta-item">Última visita: 28/05/2025 08:49</span>
+                    <span class="profile-meta-item">
+                        Entrou em {{ data_cadastro|date:"d/m/Y" }}
+                    </span>
+                    {% if ultimo_acesso %}
+                        <span class="profile-meta-item">
+                            Última visita: {{ ultimo_acesso|date:"d/m/Y H:i" }}
+                        </span>
+                    {% endif %}
                 </div>
             </div>
             <div class="profile-actions">
-                <button class="btn btn-primary">Seguir</button>
+                <a href="{% url 'editar_perfil' %}" class="btn btn-primary">Editar Perfil</a>
             </div>
         </div>
     </div>
+
     <div class="container" style="display:flex; gap:32px; margin-top:32px;">
         <!-- Sidebar -->
         <aside class="forum-sidebar" style="flex:1; min-width:260px;">
@@ -32,63 +49,96 @@
                     <h3>Sobre</h3>
                 </div>
                 <div class="section-content">
-                    <div><b>Data de Nascimento:</b> 02/03/1990</div>
-                    <div><b>Localização:</b> Pacajus/Ce</div>
-                    <div><b>Objetivo:</b> Ganho de massa muscular</div>
-                    <div><b>Peso:</b> 75kg</div>
-                    <div><b>Altura:</b> 178cm</div>
+                    {% if usuario.data_nascimento %}
+                        <div><b>Data de Nascimento:</b> {{ usuario.data_nascimento|date:"d/m/Y" }}</div>
+                    {% endif %}
+                    {% if usuario.localizacao %}
+                        <div><b>Localização:</b> {{ usuario.localizacao }}</div>
+                    {% endif %}
+                    {% if usuario.objetivo %}
+                        <div><b>Objetivo:</b> {{ usuario.objetivo }}</div>
+                    {% endif %}
+                    {% if usuario.peso %}
+                        <div><b>Peso:</b> {{ usuario.peso }}kg</div>
+                    {% endif %}
+                    {% if usuario.altura %}
+                        <div><b>Altura:</b> {{ usuario.altura }}cm</div>
+                    {% endif %}
+                    {% if usuario.site %}
+                        <div><b>Website:</b> <a href="{{ usuario.site }}" target="_blank">{{ usuario.site }}</a></div>
+                    {% endif %}
+                    {% if usuario.biografia %}
+                        <div style="margin-top: 16px;">
+                            <b>Biografia:</b>
+                            <p>{{ usuario.biografia|linebreaks }}</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
+            
             <div class="sidebar-section">
                 <div class="section-header">
                     <h3>Seguidores</h3>
                 </div>
                 <div class="section-content">
-                    <div>2 seguidores</div>
-                    <div class="online-members" style="margin-top:10px;">
-                        <img src="/static/images/default-avatar.png" alt="Avatar" class="avatar" style="width:32px; height:32px;">
-                        <img src="/static/images/default-avatar.png" alt="Avatar" class="avatar" style="width:32px; height:32px;">
-                    </div>
+                    <div>{{ total_seguidores }} seguidores</div>
+                    {% if ultimos_visitantes %}
+                        <div style="margin-top: 12px;">
+                            <small><b>Últimos visitantes:</b></small>
+                            <div class="online-members" style="margin-top:8px;">
+                                {% for visita in ultimos_visitantes %}
+                                    {% if visita.visitante.avatar %}
+                                        <img src="{{ visita.visitante.avatar.url }}" alt="{{ visita.visitante.username }}" 
+                                             class="avatar" style="width:32px; height:32px; margin-right:4px;" 
+                                             title="{{ visita.visitante.username }} - {{ visita.timestamp|date:'d/m/Y' }}">
+                                    {% else %}
+                                        <img src="{% static 'images/default-avatar.png' %}" alt="{{ visita.visitante.username }}" 
+                                             class="avatar" style="width:32px; height:32px; margin-right:4px;"
+                                             title="{{ visita.visitante.username }} - {{ visita.timestamp|date:'d/m/Y' }}">
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </aside>
+        
         <!-- Conteúdo principal -->
         <main class="forum-main" style="flex:3;">
             <div class="profile-stats forum-info" style="display:flex; gap:32px; margin-bottom:24px;">
                 <div>
                     <div class="stat-label">Total de Itens</div>
-                    <div class="stat-value">511</div>
-                </div>
-                <div>
-                    <div class="stat-label">Dias Ganhos</div>
-                    <div class="stat-value">1</div>
+                    <div class="stat-value">{{ usuario.total_itens|default:"0" }}</div>
                 </div>
                 <div>
                     <div class="stat-label">Reputação</div>
-                    <div class="stat-value">859</div>
+                    <div class="stat-value">{{ usuario.reputacao|default:"0" }}</div>
                 </div>
                 <div>
                     <div class="stat-label">Respostas</div>
-                    <div class="stat-value">3</div>
+                    <div class="stat-value">{{ usuario.answers|default:"0" }}</div>
                 </div>
             </div>
+
             <div class="profile-activity forum-info">
                 <h3>Atividades recentes</h3>
-                <div class="post-item" style="margin-bottom:18px;">
-                    <span class="post-title">Diário "Agora Vai!"</span>
-                    <div class="post-meta">28/05/2025 08:48</div>
-                    <div class="post-content">3h da manhã Eu vejo tudo E ninguém me ver O dia a dia normal do cidadão brasileiro é essa correria mesmo, os diferenciado são os que mantém a disciplina dos treinos...</div>
-                </div>
-                <div class="post-item" style="margin-bottom:18px;">
-                    <span class="post-title">Comentou em: Diário do Jonathan – Upper/Lower - devagar e constante.</span>
-                    <div class="post-meta">28/05/2025 03:12</div>
-                    <div class="post-content">Muito bom, parabéns pelo progresso!</div>
-                </div>
-                <div class="post-item" style="margin-bottom:18px;">
-                    <span class="post-title">Comentou em: Experiência em um "Juvenil"</span>
-                    <div class="post-meta">27/05/2025 21:30</div>
-                    <div class="post-content">Ótimo relato, obrigado por compartilhar!</div>
-                </div>
+                {% if atividades %}
+                    {% for atividade in atividades %}
+                        <div class="post-item" style="margin-bottom:18px;">
+                            <span class="post-title">
+                                <a href="{{ atividade.url }}">{{ atividade.titulo }}</a>
+                            </span>
+                            <div class="post-meta">{{ atividade.data|date:"d/m/Y H:i" }}</div>
+                            <div class="post-content">{{ atividade.conteudo }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="post-item" style="margin-bottom:18px; text-align:center; color:#bbb;">
+                        <p>Nenhuma atividade recente encontrada.</p>
+                        <p><small>Comece participando do fórum para ver suas atividades aqui!</small></p>
+                    </div>
+                {% endif %}
             </div>
         </main>
     </div>

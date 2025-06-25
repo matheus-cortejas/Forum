@@ -2,9 +2,58 @@
 {% load static %}
 
 {% block content %}
-<h2>Login</h2>
-<form method="post">
-    <!--Logica-->
-    <button type="submit">Entrar</button>
-</form>
+<div class="forum-wrapper">
+    <main class="forum-main">
+        <div class="container" style="max-width: 400px; margin: 60px auto;">
+            <div class="auth-form" style="background: var(--color-dark-2, #232428); border-radius: 8px; padding: 32px;">
+                <div class="auth-header" style="text-align: center; margin-bottom: 32px;">
+                    <h2 style="color: var(--color-text, #fff); margin-bottom: 8px;">Entrar</h2>
+                    <p style="color: #bbb;">Entre na sua conta para continuar</p>
+                </div>
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}" style="margin-bottom: 20px; padding: 12px; border-radius: 4px; 
+                             background: {% if message.tags == 'error' %}#d32f2f{% else %}#388e3c{% endif %}; color: #fff;">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <form method="post" class="auth-form-content">
+                    {% csrf_token %}
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="username" style="display: block; margin-bottom: 8px; color: #fff;">Nome de usuário:</label>
+                        <input type="text" id="username" name="username" required 
+                               style="width: 100%; padding: 12px; border: 1px solid #444; border-radius: 4px; 
+                                      background: #292b31; color: #fff;" 
+                               value="{{ form.username.value|default:'' }}">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label for="password" style="display: block; margin-bottom: 8px; color: #fff;">Senha:</label>
+                        <input type="password" id="password" name="password" required 
+                               style="width: 100%; padding: 12px; border: 1px solid #444; border-radius: 4px; 
+                                      background: #292b31; color: #fff;">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" 
+                            style="width: 100%; padding: 12px; background: var(--color-primary, #e53935); 
+                                   color: #fff; border: none; border-radius: 4px; font-size: 1rem; cursor: pointer;">
+                        Entrar
+                    </button>
+                </form>
+                
+                <div class="auth-links" style="text-align: center; margin-top: 24px;">
+                    <p style="color: #bbb;">
+                        Não tem uma conta? 
+                        <a href="{% url 'register' %}" style="color: var(--color-primary, #e53935); text-decoration: none;">
+                            Registre-se aqui
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
 {% endblock %}

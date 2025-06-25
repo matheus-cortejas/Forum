@@ -1,0 +1,55 @@
+<div class="reply-item" id="reply-{{ reply.id }}">
+    <div class="reply-author">
+        <div class="author-info">
+            <a href="{% url 'perfil' username=reply.autor.username %}" class="author-name">
+                {{ reply.autor.username }}
+            </a>
+            <div class="author-role">{{ reply.autor.apelido|default:"Membro" }}</div>
+        </div>
+
+        <div class="author-avatar">
+            {% if reply.autor.avatar %}
+                <img src="{{ reply.autor.avatar.url }}" alt="Avatar" class="avatar">
+            {% else %}
+                <img src="{% static 'images/default-avatar.png' %}" alt="Default Avatar" class="avatar">
+            {% endif %}
+        </div>
+
+        <div class="author-stats">
+            <div class="stat-item">Posts: <u>{{ reply.autor.total_itens|default:"0" }}</u></div>
+            <div class="stat-item">Respostas: <u>{{ reply.autor.answers|default:"0" }}</u></div>
+        </div>
+    </div>
+
+    <div class="reply-content-wrapper">
+        <div class="reply-content">
+            {{ reply.conteudo|linebreaks }}
+        </div>
+
+        <div class="reply-meta">
+            <span class="reply-date">{{ reply.criado_em|date:"d/m/Y H:i" }}</span>
+            
+            {% if reply.atualizado_em != reply.criado_em %}
+                <span class="edit-indicator">
+                    (Editado em {{ reply.atualizado_em|date:"d/m/Y H:i" }})
+                </span>
+            {% endif %}
+
+            {% if user.is_authenticated %}
+            <div class="reply-actions">
+                {% if user == reply.autor %}
+                    <button onclick="editReply({{ reply.id }})" class="btn-action" title="Editar">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                {% endif %}
+                
+                {% if user == reply.autor or user.is_staff %}
+                    <button onclick="deleteReply({{ reply.id }})" class="btn-action btn-danger" title="Deletar">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

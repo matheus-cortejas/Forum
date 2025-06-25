@@ -2,140 +2,157 @@
 {% load static %}
 
 {% block content %}
-<div class="container">
-    <!--Navigation-->
-    <div class="navigate">
-        <span>
-            <a href="{% url 'home' %}">Forum</a> >> 
-            <a href="{% url 'assunto_detail' postagem.assunto.categoria.slug postagem.assunto.slug %}">
-                {{ postagem.assunto.titulo }}
-            </a> >> 
-            {% if postagem.tipo == 'THREAD' %}
+<div class="forum-wrapper">
+    <div class="container">
+        <!-- Navegação breadcrumb -->
+        <div class="navigate">
+            <span>
+                <a href="{% url 'home' %}">Início</a> >> 
+                <a href="{% url 'assunto_detail' categoria_slug=postagem.assunto.categoria.slug assunto_slug=postagem.assunto.slug %}">
+                    {{ postagem.assunto.nome }}
+                </a> >> 
                 {{ postagem.titulo }}
-            {% else %}
-                {{ postagem.titulo }}
-            {% endif %}
-        </span>
-    </div>
-
-    <!--Topic Section-->
-    <div class="topic-container">
-        <!--Original thread-->
-        <div class="head">
-            <div class="authors">Autor</div>
-            <div class="content">
-                {% if postagem.tipo == 'THREAD' %}
-                    Tópico: {{ postagem.titulo }} (Visualizações: {{ postagem.visualizacoes }})
-                {% else %}
-                    {{ postagem.titulo }}
-                {% endif %}
-            </div>
+            </span>
         </div>
 
-        <div class="body">
-            <div class="authors">
-                <div class="username"><a href="#">{{ postagem.autor.username }}</a></div>
-                <div>{{ postagem.autor.get_role_display }}</div>
-                {% if postagem.autor.avatar %}
-                    <img src="{{ postagem.autor.avatar.url }}" alt="Avatar">
-                {% else %}
-                    <img src="{% static 'images/default-avatar.png' %}" alt="Default Avatar">
-                {% endif %}
-                <div>Posts: <u>{{ postagem.autor.postagem_set.count }}</u></div>
-            </div>
-            <div class="content">
-                {{ postagem.conteudo|linebreaks }}
-                <hr>
-                {{ postagem.autor.username }}
-                <br>
-                <div class="post-meta">
-                    Postado em: {{ postagem.criado_em|date:"d/m/Y H:i" }}
-                    {% if postagem.criado_em != postagem.atualizado_em %}
-                        <br>Editado em: {{ postagem.atualizado_em|date:"d/m/Y H:i" }}
-                    {% endif %}
+        <!-- Post principal -->
+        <div class="topic-container">
+            <div class="head">
+                <div class="authors">Autor</div>
+                <div class="content">
+                    Tópico: {{ postagem.titulo }} ({{ postagem.visualizacoes }} visualizações)
                 </div>
-                {% if user.is_authenticated %}
-                <div class="actions">
-                    <button onclick="showComment()">Responder</button>
+            </div>
+
+            <div class="body">
+                <div class="authors">
+                    <div class="username">
+                        <a href="{% url 'perfil' username=postagem.autor.username %}">
+                            {{ postagem.autor.username }}
+                        </a>
+                    </div>
+                    <div class="user-role">{{ postagem.autor.apelido|default:"Membro" }}</div>
                     
-                    <!-- Reações -->
-                    <div class="reactions">
-                        {% for reacao in reacoes %}
-                        <button class="reaction {% if reacao.id == user_reaction.id %}active{% endif %}"
-                                onclick="addReaction('{{ reacao.id }}')">
-                            {{ reacao.nome }} ({{ reacao.count }})
-                        </button>
-                        {% endfor %}
+                    {% if postagem.autor.avatar %}
+                        <img src="{{ postagem.autor.avatar.url }}" alt="Avatar" class="user-avatar">
+                    {% else %}
+                        <img src="{% static 'images/default-avatar.png' %}" alt="Default Avatar" class="user-avatar">
+                    {% endif %}
+                    
+                    <div class="user-stats">
+                        <div>Posts: <u>{{ postagem.autor.total_itens|default:"0" }}</u></div>
+                        <div>Respostas: <u>{{ postagem.autor.answers|default:"0" }}</u></div>
+                        <div>Reputação: <u>{{ postagem.autor.reputacao|default:"0" }}</u></div>
                     </div>
                 </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+                
+                <div class="content">
+                    <div class="post-content">
+                        {{ postagem.conteudo|linebreaks }}
+                    </div>
+                    
+                    <div class="post-meta">
+                        <span class="post-date">{{ postagem.criado_em|date:"d/m/Y H:i" }}</span>
+                        {% if postagem.atualizado_em != postagem.criado_em %}
+                            <span class="post-edited">
+                                (Editado em {{ postagem.atualizado_em|date:"d/m/Y H:i" }})
+                            </span>
+                        {% endif %}
+                    </div>
 
-    {% if user.is_authenticated %}
-    <!--Comment Area-->
-    <div class="comment-area hide" id="comment-area">
-        <form method="post" action="{% url 'add_reply' postagem.assunto.categoria.slug postagem.assunto.slug postagem.id %}">
-            {% csrf_token %}
-            <textarea name="conteudo" placeholder="Escreva sua resposta..."></textarea>
-            <input type="submit" value="Enviar">
-        </form>
-    </div>
-    {% endif %}
-
-    <!--Comments Section-->
-    {% for reply in replies %}
-    <div class="comments-container">
-        <div class="body">
-            <div class="authors">
-                <div class="username"><a href="#">{{ reply.autor.username }}</a></div>
-                <div>{{ reply.autor.get_role_display }}</div>
-                {% if reply.autor.avatar %}
-                    <img src="{{ reply.autor.avatar.url }}" alt="Avatar">
-                {% else %}
-                    <img src="{% static 'images/default-avatar.png' %}" alt="Default Avatar">
-                {% endif %}
-                <div>Posts: <u>{{ reply.autor.postagem_set.count }}</u></div>
-            </div>
-            <div class="content">
-                {{ reply.conteudo|linebreaks }}
-                <br>
-                <div class="post-meta">
-                    {{ reply.criado_em|date:"d/m/Y H:i" }}
+                    {% if user.is_authenticated %}
+                    <div class="actions">
+                        <button onclick="Reply.show()" class="btn btn-primary">
+                            <i class="fa fa-reply"></i> Responder
+                        </button>
+                        
+                        {% if user == postagem.autor or user.is_staff %}
+                            <button onclick="Post.edit({{ postagem.id }})" class="btn btn-secondary">
+                                <i class="fa fa-edit"></i> Editar
+                            </button>
+                        {% endif %}
+                        
+                        <!-- Reações -->
+                        <div class="reactions" id="reactions-container">
+                            {% for reacao in reacoes %}
+                            <button class="reaction {% if reacao.id == user_reaction.reacao.id %}active{% endif %}"
+                                    onclick="Reactions.toggle('{{ reacao.id }}')">
+                                {{ reacao.nome }} ({{ reacao.count }})
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
+
+        <!-- Formulário de resposta -->
+        {% if user.is_authenticated %}
+        <div class="reply-form-container hide" id="reply-form-container">
+            <div class="reply-form-header">
+                <h3>Adicionar Resposta</h3>
+                <button onclick="Reply.hide()" class="btn-close">×</button>
+            </div>
+            
+            <form method="post" action="{% url 'add_reply' postagem.assunto.categoria.slug postagem.assunto.slug postagem.id %}" 
+                  class="reply-form" id="reply-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea name="conteudo" id="reply-content" 
+                              placeholder="Escreva sua resposta aqui..." 
+                              rows="6" required minlength="10" maxlength="10000"></textarea>
+                    <div class="char-counter">
+                        <span id="char-count">0</span>/10000 caracteres
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-paper-plane"></i> Enviar Resposta
+                    </button>
+                    <button type="button" onclick="Reply.hide()" class="btn btn-secondary">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Lista de respostas -->
+        {% if replies %}
+        <div class="replies-section">
+            <div class="replies-header">
+                <h3>
+                    <i class="fa fa-comments"></i> 
+                    <span id="replies-count">{{ replies.count }}</span> Resposta{{ replies.count|pluralize }}
+                </h3>
+            </div>
+            
+            <div class="replies-container" id="replies-container">
+                {% for reply in replies %}
+                    {% include 'posts/partials/reply_item.html' with reply=reply %}
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="no-replies">
+            <div class="no-replies-content">
+                <i class="fa fa-comment-o"></i>
+                <h3>Nenhuma resposta ainda</h3>
+                <p>Seja o primeiro a responder esta thread!</p>
+                {% if user.is_authenticated %}
+                    <button onclick="Reply.show()" class="btn btn-primary">
+                        <i class="fa fa-reply"></i> Adicionar Primeira Resposta
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
     </div>
-    {% endfor %}
 </div>
 
 {% block extra_js %}
-<script>
-function showComment() {
-    document.getElementById('comment-area').classList.toggle('hide');
-}
-
-function addReaction(reacaoId) {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = "{% url 'add_reaction' postagem.assunto.categoria.slug postagem.assunto.slug postagem.id %}";
-    
-    const csrf = document.createElement('input');
-    csrf.type = 'hidden';
-    csrf.name = 'csrfmiddlewaretoken';
-    csrf.value = '{{ csrf_token }}';
-    
-    const reacao = document.createElement('input');
-    reacao.type = 'hidden';
-    reacao.name = 'reacao';
-    reacao.value = reacaoId;
-    
-    form.appendChild(csrf);
-    form.appendChild(reacao);
-    document.body.appendChild(form);
-    form.submit();
-}
-</script>
+<script src="{% static 'js/pages/post-detail.js' %}"></script>
 {% endblock %}
 {% endblock %}

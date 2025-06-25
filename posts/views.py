@@ -7,6 +7,9 @@ from django.core.paginator import Paginator
 from itertools import chain
 from operator import attrgetter
 from core.context_processors import filtros_forum
+from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 def ultimas_atividades(request):
     """Lista todas as atividades recentes (threads, posts, etc) com filtros"""
@@ -294,7 +297,7 @@ def posts(request):
         'data_fim': data_fim,
         'ordem_crescente': ordem_crescente,
     })
-# ...existing code...
+
 @login_required
 def add_reply(request, categoria_slug, assunto_slug, thread_id):
     """View para adicionar uma resposta a uma thread"""
@@ -308,23 +311,105 @@ def add_reply(request, categoria_slug, assunto_slug, thread_id):
     )
     
     if request.method == 'POST':
-        conteudo = request.POST.get('conteudo')
-        if conteudo:
-            Reply.objects.create(
-                postagem=thread,
-                autor=request.user,
-                conteudo=conteudo
-            )
+        conteudo = request.POST.get('conteudo', '').strip()
         
-        return redirect('postagem_detail', 
-                       categoria_slug=categoria_slug,
-                       assunto_slug=assunto_slug,
-                       postagem_id=thread_id)
+        if not conteudo:
+            messages.error(request, 'O conteúdo da resposta não pode estar vazio.')
+        elif len(conteudo) < 10:
+            messages.error(request, 'A resposta deve ter pelo menos 10 caracteres.')
+        elif len(conteudo) > 10000:
+            messages.error(request, 'A resposta não pode ter mais de 10.000 caracteres.')
+        else:
+            try:
+                reply = Reply.objects.create(
+                    postagem=thread,
+                    autor=request.user,
+                    conteudo=conteudo
+                )
+                
+                # Atualizar contador de respostas do usuário
+                request.user.answers = (request.user.answers or 0) + 1
+                request.user.total_itens = (request.user.total_itens or 0) + 1
+                request.user.save(update_fields=['answers', 'total_itens'])
+                
+                messages.success(request, 'Resposta adicionada com sucesso!')
+                
+                # Se for requisição AJAX, retornar JSON
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Resposta adicionada com sucesso!',
+                        'reply_id': reply.id,
+                        'reply_html': render_reply_html(reply, request.user)
+                    })
+                
+            except Exception as e:
+                messages.error(request, f'Erro ao salvar resposta: {str(e)}')
     
     return redirect('postagem_detail', 
                    categoria_slug=categoria_slug,
                    assunto_slug=assunto_slug,
                    postagem_id=thread_id)
+
+@login_required
+@require_POST
+def edit_reply(request, reply_id):
+    """View para editar uma resposta"""
+    
+    reply = get_object_or_404(Reply, id=reply_id, autor=request.user)
+    
+    conteudo = request.POST.get('conteudo', '').strip()
+    
+    if not conteudo:
+        return JsonResponse({'success': False, 'error': 'Conteúdo não pode estar vazio'})
+    
+    if len(conteudo) < 10:
+        return JsonResponse({'success': False, 'error': 'Resposta deve ter pelo menos 10 caracteres'})
+    
+    if len(conteudo) > 10000:
+        return JsonResponse({'success': False, 'error': 'Resposta não pode ter mais de 10.000 caracteres'})
+    
+    reply.conteudo = conteudo
+    reply.save()
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Resposta editada com sucesso!',
+        'conteudo': reply.conteudo,
+        'data_edicao': reply.atualizado_em.strftime('%d/%m/%Y %H:%M')
+    })
+
+@login_required
+@require_POST
+def delete_reply(request, reply_id):
+    """View para deletar uma resposta"""
+    
+    reply = get_object_or_404(Reply, id=reply_id)
+    
+    # Verificar permissões
+    if reply.autor != request.user and not request.user.is_staff:
+        return JsonResponse({'success': False, 'error': 'Sem permissão para deletar esta resposta'})
+    
+    # Atualizar contadores do usuário
+    reply.autor.answers = max(0, (reply.autor.answers or 1) - 1)
+    reply.autor.total_itens = max(0, (reply.autor.total_itens or 1) - 1)
+    reply.autor.save(update_fields=['answers', 'total_itens'])
+    
+    reply.delete()
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Resposta deletada com sucesso!'
+    })
+
+def render_reply_html(reply, current_user):
+    """Função auxiliar para renderizar HTML de uma resposta"""
+    from django.template.loader import render_to_string
+    
+    return render_to_string('posts/partials/reply_item.html', {
+        'reply': reply,
+        'user': current_user
+    })
 
 @login_required
 def add_reaction(request, categoria_slug, assunto_slug, postagem_id):
