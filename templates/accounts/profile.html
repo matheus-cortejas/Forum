@@ -17,11 +17,7 @@
                 <h2 class="profile-username">{{ usuario.username }}</h2>
                 <div class="profile-role">
                     <span class="user-link" style="color:#1976d2;">
-                        {% if usuario.apelido %}
-                            {{ usuario.apelido }}
-                        {% else %}
-                            Membro
-                        {% endif %}
+                        {{ usuario.apelido|default:"Membro" }}
                     </span>
                 </div>
                 <div class="profile-meta">
@@ -35,9 +31,20 @@
                     {% endif %}
                 </div>
             </div>
+            {% if user.is_authenticated %}
             <div class="profile-actions">
-                <a href="{% url 'editar_perfil' %}" class="btn btn-primary">Editar Perfil</a>
+                {% if is_own_profile %}
+                    <a href="{% url 'editar_perfil' %}" class="btn btn-primary">Editar Perfil</a>
+                {% else %}
+                    <form method="post" action="{% url 'seguir_usuario' usuario.username %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn {% if seguindo %}btn-secondary{% else %}btn-primary{% endif %}">
+                            {% if seguindo %}Deixar de Seguir{% else %}Seguir{% endif %}
+                        </button>
+                    </form>
+                {% endif %}
             </div>
+            {% endif %}
         </div>
     </div>
 
@@ -49,6 +56,12 @@
                     <h3>Sobre</h3>
                 </div>
                 <div class="section-content">
+                    {% if usuario.biografia %}
+                        <div style="margin-bottom: 16px;">
+                            <p>{{ usuario.biografia|linebreaks }}</p>
+                        </div>
+                    {% endif %}
+                    
                     {% if usuario.data_nascimento %}
                         <div><b>Data de Nascimento:</b> {{ usuario.data_nascimento|date:"d/m/Y" }}</div>
                     {% endif %}
@@ -67,35 +80,28 @@
                     {% if usuario.site %}
                         <div><b>Website:</b> <a href="{{ usuario.site }}" target="_blank">{{ usuario.site }}</a></div>
                     {% endif %}
-                    {% if usuario.biografia %}
-                        <div style="margin-top: 16px;">
-                            <b>Biografia:</b>
-                            <p>{{ usuario.biografia|linebreaks }}</p>
-                        </div>
-                    {% endif %}
                 </div>
             </div>
             
             <div class="sidebar-section">
                 <div class="section-header">
-                    <h3>Seguidores</h3>
+                    <h3>Seguidores ({{ total_seguidores }})</h3>
                 </div>
                 <div class="section-content">
-                    <div>{{ total_seguidores }} seguidores</div>
                     {% if ultimos_visitantes %}
                         <div style="margin-top: 12px;">
                             <small><b>Últimos visitantes:</b></small>
                             <div class="online-members" style="margin-top:8px;">
                                 {% for visita in ultimos_visitantes %}
-                                    {% if visita.visitante.avatar %}
-                                        <img src="{{ visita.visitante.avatar.url }}" alt="{{ visita.visitante.username }}" 
-                                             class="avatar" style="width:32px; height:32px; margin-right:4px;" 
-                                             title="{{ visita.visitante.username }} - {{ visita.timestamp|date:'d/m/Y' }}">
-                                    {% else %}
-                                        <img src="{% static 'images/default-avatar.png' %}" alt="{{ visita.visitante.username }}" 
-                                             class="avatar" style="width:32px; height:32px; margin-right:4px;"
-                                             title="{{ visita.visitante.username }} - {{ visita.timestamp|date:'d/m/Y' }}">
-                                    {% endif %}
+                                    <a href="{% url 'perfil' username=visita.visitante.username %}" title="{{ visita.visitante.username }} - {{ visita.timestamp|date:'d/m/Y' }}">
+                                        {% if visita.visitante.avatar %}
+                                            <img src="{{ visita.visitante.avatar.url }}" alt="{{ visita.visitante.username }}" 
+                                                 class="avatar" style="width:32px; height:32px; margin-right:4px;">
+                                        {% else %}
+                                            <img src="{% static 'images/default-avatar.png' %}" alt="{{ visita.visitante.username }}" 
+                                                 class="avatar" style="width:32px; height:32px; margin-right:4px;">
+                                        {% endif %}
+                                    </a>
                                 {% endfor %}
                             </div>
                         </div>
@@ -108,16 +114,16 @@
         <main class="forum-main" style="flex:3;">
             <div class="profile-stats forum-info" style="display:flex; gap:32px; margin-bottom:24px;">
                 <div>
-                    <div class="stat-label">Total de Itens</div>
+                    <div class="stat-label">Posts</div>
                     <div class="stat-value">{{ usuario.total_itens|default:"0" }}</div>
-                </div>
-                <div>
-                    <div class="stat-label">Reputação</div>
-                    <div class="stat-value">{{ usuario.reputacao|default:"0" }}</div>
                 </div>
                 <div>
                     <div class="stat-label">Respostas</div>
                     <div class="stat-value">{{ usuario.answers|default:"0" }}</div>
+                </div>
+                <div>
+                    <div class="stat-label">Reputação</div>
+                    <div class="stat-value">{{ usuario.reputacao|default:"0" }}</div>
                 </div>
             </div>
 
@@ -136,7 +142,9 @@
                 {% else %}
                     <div class="post-item" style="margin-bottom:18px; text-align:center; color:#bbb;">
                         <p>Nenhuma atividade recente encontrada.</p>
-                        <p><small>Comece participando do fórum para ver suas atividades aqui!</small></p>
+                        {% if is_own_profile %}
+                            <p><small>Comece participando do fórum para ver suas atividades aqui!</small></p>
+                        {% endif %}
                     </div>
                 {% endif %}
             </div>

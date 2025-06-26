@@ -9,11 +9,12 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     
     # Perfil
-    path('perfil/<str:username>/', views.PerfilDetailView.as_view(), name='perfil'),
+    path('profile/<str:username>/', views.PerfilDetailView.as_view(), name='perfil'),  # Para outros usuários
+    path('profile/', views.profile, name='profile'),  # Para usuário logado
     path('perfil/editar/', views.EditarPerfilView.as_view(), name='editar_perfil'),
     path('seguir/<str:username>/', views.seguir_usuario, name='seguir_usuario'),
 
+    # Membros
     path('members/', views.members, name='members'),
     path('online/', views.online, name='online'),
-    path('profile/', views.profile, name='profile'),
 ]

@@ -1,0 +1,205 @@
+/* Sistema de Reações */
+.reactions-container {
+    position: relative;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.reactions-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.reaction-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--color-dark-3);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.9em;
+}
+
+.reaction-icon-small {
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
+}
+
+.reaction-count-small {
+    color: #ccc;
+    font-weight: 500;
+}
+
+/* Botão principal de reação */
+.reaction-btn {
+    background: var(--color-dark-3);
+    border: 1px solid var(--color-dark-4);
+    color: #ccc;
+    padding: 8px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9em;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.reaction-btn:hover {
+    background: var(--color-dark-4);
+    color: var(--color-text);
+}
+
+.reaction-btn.has-reaction {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.reaction-btn.active {
+    background: var(--color-primary);
+    color: white;
+}
+
+.reaction-count {
+    font-weight: bold;
+    min-width: 16px;
+    text-align: center;
+}
+
+/* Dropdown de reações */
+.reactions-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--color-dark-2);
+    border: 1px solid var(--color-dark-4);
+    border-radius: 8px;
+    padding: 8px;
+    z-index: 1000;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s;
+}
+
+.reactions-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.reactions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 4px;
+}
+
+.reaction-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.reaction-option:hover {
+    background: var(--color-dark-3);
+}
+
+.reaction-option.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.reaction-option.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 0.8s linear infinite;
+}
+
+.reaction-icon {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 4px;
+    border-radius: 3px;
+}
+
+.reaction-name {
+    font-size: 0.8em;
+    color: #ccc;
+    text-align: center;
+}
+
+/* Feedback de reação */
+.reaction-feedback {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-primary);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    white-space: nowrap;
+    animation: reactionFeedback 2s ease-out forwards;
+}
+
+@keyframes reactionFeedback {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+    }
+    20% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    80% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .reactions-dropdown {
+        left: 50%;
+        transform: translateX(-50%) translateY(-10px);
+        min-width: 180px;
+    }
+    
+    .reactions-dropdown.show {
+        transform: translateX(-50%) translateY(0);
+    }
+    
+    .reactions-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}

@@ -125,8 +125,12 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 #STATIC_ROOT = BASE_DIR / 'static'
-MEDIA_ROOT  = [BASE_DIR / 'media']
+MEDIA_ROOT  = BASE_DIR / 'media'
 MEDIA_URL = 'media/'
+
+# Configurações para upload de imagens
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 
 # URLs de redirecionamento após login/logout
 LOGIN_URL = '/accounts/login/'

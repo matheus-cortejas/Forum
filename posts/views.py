@@ -1,15 +1,23 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Prefetch
-from .models import Postagem as Post, Reply, ReacaoPostagem
-from home.models import Assunto
-from django.core.paginator import Paginator
-from itertools import chain
-from operator import attrgetter
-from core.context_processors import filtros_forum
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.core.paginator import Paginator
+from itertools import chain
+from operator import attrgetter
+
+from .models import (
+    Postagem as Post, 
+    Reply, 
+    ReacaoPostagem, 
+    ReacaoReply,  
+    Reacao
+)
+
+from home.models import Assunto
+from core.context_processors import filtros_forum
 
 def ultimas_atividades(request):
     """Lista todas as atividades recentes (threads, posts, etc) com filtros"""
@@ -136,22 +144,34 @@ def postagem_detail(request, categoria_slug, assunto_slug, postagem_id):
     # Incrementa visualizações
     Post.objects.filter(id=postagem_id).update(visualizacoes=F('visualizacoes') + 1)
     
-    # Buscar replies
+    # Buscar replies com reações
     replies = Reply.objects.filter(postagem=postagem)\
         .select_related('autor')\
+        .prefetch_related('reacoes__reacao', 'reacoes__usuario')\
         .order_by('criado_em')
     
-    # Buscar reações
-    reacoes = postagem.get_reacoes_count()
-    user_reaction = None
+    # Buscar reações disponíveis
+    reacoes_disponiveis = Reacao.objects.filter(ativo=True).order_by('ordem')
+    
+    # Buscar reações da postagem
+    reacoes_postagem = postagem.get_reacoes_count()
+    user_reaction_postagem = postagem.get_user_reaction(request.user)
+    
+    # Buscar reações do usuário para cada reply
+    user_reactions_replies = {}
     if request.user.is_authenticated:
-        user_reaction = postagem.get_user_reaction(request.user)
+        for reply in replies:
+            user_reaction = reply.get_user_reaction(request.user)
+            if user_reaction:
+                user_reactions_replies[reply.id] = user_reaction
     
     context = {
         'postagem': postagem,
         'replies': replies,
-        'reacoes': reacoes,
-        'user_reaction': user_reaction
+        'reacoes_disponiveis': reacoes_disponiveis,
+        'reacoes_postagem': reacoes_postagem,
+        'user_reaction_postagem': user_reaction_postagem,
+        'user_reactions_replies': user_reactions_replies,
     }
     
     return render(request, 'posts/detail.html', context)
@@ -411,37 +431,185 @@ def delete_reply(request, reply_id):
         'message': 'Resposta deletada com sucesso!'
     })
 
-def render_reply_html(reply, current_user):
-    """Função auxiliar para renderizar HTML de uma resposta"""
-    from django.template.loader import render_to_string
-    
-    return render_to_string('posts/partials/reply_item.html', {
-        'reply': reply,
-        'user': current_user
-    })
-
 @login_required
-def add_reaction(request, categoria_slug, assunto_slug, postagem_id):
+@require_POST
+def add_reaction_postagem(request, categoria_slug, assunto_slug, postagem_id):
     """View para adicionar/alterar reação em uma postagem"""
     
-    if request.method == 'POST':
-        postagem = get_object_or_404(
-            Post,
-            id=postagem_id,
-            assunto__slug=assunto_slug,
-            assunto__categoria__slug=categoria_slug
-        )
+    postagem = get_object_or_404(
+        Post,
+        id=postagem_id,
+        assunto__slug=assunto_slug,
+        assunto__categoria__slug=categoria_slug
+    )
+    
+    reacao_id = request.POST.get('reacao_id')
+    
+    if not reacao_id:
+        return JsonResponse({'success': False, 'error': 'Reação não especificada'})
+    
+    try:
+        reacao = get_object_or_404(Reacao, id=reacao_id, ativo=True)
         
-        reacao_id = request.POST.get('reacao')
-        if reacao_id:
-            ReacaoPostagem.objects.update_or_create(
+        # Verificar se usuário já reagiu
+        existing_reaction = ReacaoPostagem.objects.filter(
+            postagem=postagem,
+            usuario=request.user
+        ).first()
+        
+        if existing_reaction:
+            if existing_reaction.reacao.id == int(reacao_id):
+                # Remover reação se for a mesma
+                existing_reaction.delete()
+                action = 'removed'
+                
+                # Diminuir reputação do autor da postagem
+                postagem.autor.reputacao = max(0, (postagem.autor.reputacao or 1) - 1)
+                postagem.autor.save(update_fields=['reputacao'])
+            else:
+                # Alterar reação (não muda reputação)
+                existing_reaction.reacao = reacao
+                existing_reaction.save()
+                action = 'changed'
+        else:
+            # Adicionar nova reação
+            ReacaoPostagem.objects.create(
                 postagem=postagem,
                 usuario=request.user,
-                defaults={'reacao_id': reacao_id}
+                reacao=reacao
             )
-    
-    return redirect('postagem_detail', 
-                   categoria_slug=categoria_slug,
-                   assunto_slug=assunto_slug,
-                   postagem_id=postagem_id)
+            action = 'added'
+            
+            # Aumentar reputação do autor da postagem
+            postagem.autor.reputacao = (postagem.autor.reputacao or 0) + 1
+            postagem.autor.save(update_fields=['reputacao'])
+        
+        # CORRIGIR: Buscar reações com URLs corretas
+        from django.db.models import Count
+        reacoes_query = ReacaoPostagem.objects.filter(postagem=postagem)\
+            .select_related('reacao')\
+            .values('reacao__id', 'reacao__nome', 'reacao__icone', 'reacao__ordem')\
+            .annotate(count=Count('id'))\
+            .order_by('reacao__ordem')
+        
+        user_reaction = ReacaoPostagem.objects.filter(
+            postagem=postagem, 
+            usuario=request.user
+        ).select_related('reacao').first()
+        
+        # Converter para formato serializável com URLs corretas
+        reacoes_data = []
+        for reacao_data in reacoes_query:
+            # Construir URL da imagem corretamente
+            icone_url = ''
+            if reacao_data['reacao__icone']:
+                icone_url = f"/media/{reacao_data['reacao__icone']}"
+            
+            reacoes_data.append({
+                'reacao__nome': reacao_data['reacao__nome'],
+                'reacao__id': reacao_data['reacao__id'],
+                'reacao__icone': icone_url,
+                'count': reacao_data['count']
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'action': action,
+            'reacoes': reacoes_data,
+            'user_reaction_id': user_reaction.reacao.id if user_reaction else None
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Erro em add_reaction_postagem: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({'success': False, 'error': str(e)})
 
+
+@login_required
+@require_POST
+def add_reaction_reply(request, reply_id):
+    """View para adicionar/alterar reação em uma resposta"""
+    
+    reply = get_object_or_404(Reply, id=reply_id)
+    reacao_id = request.POST.get('reacao_id')
+    
+    if not reacao_id:
+        return JsonResponse({'success': False, 'error': 'Reação não especificada'})
+    
+    try:
+        reacao = get_object_or_404(Reacao, id=reacao_id, ativo=True)
+        
+        # Verificar se usuário já reagiu
+        existing_reaction = ReacaoReply.objects.filter(
+            reply=reply,
+            usuario=request.user
+        ).first()
+        
+        if existing_reaction:
+            if existing_reaction.reacao.id == int(reacao_id):
+                # Remover reação se for a mesma
+                existing_reaction.delete()
+                action = 'removed'
+                
+                # Diminuir reputação do autor da reply
+                reply.autor.reputacao = max(0, (reply.autor.reputacao or 1) - 1)
+                reply.autor.save(update_fields=['reputacao'])
+            else:
+                # Alterar reação (não muda reputação)
+                existing_reaction.reacao = reacao
+                existing_reaction.save()
+                action = 'changed'
+        else:
+            # Adicionar nova reação
+            ReacaoReply.objects.create(
+                reply=reply,
+                usuario=request.user,
+                reacao=reacao
+            )
+            action = 'added'
+            
+            # Aumentar reputação do autor da reply
+            reply.autor.reputacao = (reply.autor.reputacao or 0) + 1
+            reply.autor.save(update_fields=['reputacao'])
+        
+        # CORRIGIR: Buscar reações com URLs corretas
+        from django.db.models import Count
+        reacoes_query = ReacaoReply.objects.filter(reply=reply)\
+            .select_related('reacao')\
+            .values('reacao__id', 'reacao__nome', 'reacao__icone', 'reacao__ordem')\
+            .annotate(count=Count('id'))\
+            .order_by('reacao__ordem')
+        
+        user_reaction = ReacaoReply.objects.filter(
+            reply=reply, 
+            usuario=request.user
+        ).select_related('reacao').first()
+        
+        # Converter para formato serializável com URLs corretas
+        reacoes_data = []
+        for reacao_data in reacoes_query:
+            # Construir URL da imagem corretamente
+            icone_url = ''
+            if reacao_data['reacao__icone']:
+                icone_url = f"/media/{reacao_data['reacao__icone']}"
+            
+            reacoes_data.append({
+                'reacao__nome': reacao_data['reacao__nome'],
+                'reacao__id': reacao_data['reacao__id'],
+                'reacao__icone': icone_url,
+                'count': reacao_data['count']
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'action': action,
+            'reacoes': reacoes_data,
+            'user_reaction_id': user_reaction.reacao.id if user_reaction else None
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Erro em add_reaction_reply: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({'success': False, 'error': str(e)})

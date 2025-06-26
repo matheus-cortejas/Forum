@@ -8,8 +8,7 @@
         <div class="navigate">
             <span>
                 <a href="{% url 'home' %}">Início</a> >>
-                <a
-                    href="{% url 'assunto_detail' categoria_slug=postagem.assunto.categoria.slug assunto_slug=postagem.assunto.slug %}">
+                <a href="{% url 'assunto_detail' categoria_slug=postagem.assunto.categoria.slug assunto_slug=postagem.assunto.slug %}">
                     {{ postagem.assunto.nome }}
                 </a> >>
                 {{ postagem.titulo }}
@@ -51,16 +50,56 @@
                     <div class="post-content">
                         {{ postagem.conteudo|linebreaks }}
                     </div>
-
+                    
                     <div class="post-meta">
                         <span class="post-date">{{ postagem.criado_em|date:"d/m/Y H:i" }}</span>
                         {% if postagem.atualizado_em != postagem.criado_em %}
-                        <span class="post-edited">
-                            (Editado em {{ postagem.atualizado_em|date:"d/m/Y H:i" }})
-                        </span>
+                            <span class="post-edited">
+                                (Editado em {{ postagem.atualizado_em|date:"d/m/Y H:i" }})
+                            </span>
                         {% endif %}
                     </div>
 
+                    <!-- Sistema de Reações da Postagem -->
+                    {% if user.is_authenticated %}
+                    <div class="reactions-container" data-type="postagem" data-target-id="{{ postagem.id }}">
+                        <div class="reactions-summary">
+                            {% for reacao in reacoes_postagem %}
+                                {% if reacao.count > 0 %}
+                                <div class="reaction-summary-item">
+                                    <img src="{{ reacao.reacao__icone.url }}" alt="{{ reacao.reacao__nome }}" class="reaction-icon-small">
+                                    <span class="reaction-count-small">{{ reacao.count }}</span>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        
+                        <button class="reaction-btn {% if user_reaction_postagem %}has-reaction{% endif %}" 
+                                {% if user_reaction_postagem %}data-user-reaction="{{ user_reaction_postagem.reacao.id }}"{% endif %}>
+                            <i class="fa fa-smile-o"></i>
+                            {% with total_reactions=reacoes_postagem|length %}
+                            <span class="reaction-count" style="{% if not total_reactions %}display: none;{% endif %}">
+                                {{ total_reactions }}
+                            </span>
+                            {% endwith %}
+                        </button>
+                        
+                        <div class="reactions-dropdown">
+                            <div class="reactions-grid">
+                                {% for reacao in reacoes_disponiveis %}
+                                <div class="reaction-option" 
+                                     data-reacao-id="{{ reacao.id }}"
+                                     title="{{ reacao.nome }}">
+                                    <img src="{{ reacao.icone.url }}" alt="{{ reacao.nome }}" class="reaction-icon">
+                                    <span class="reaction-name">{{ reacao.nome }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Ações da Postagem -->
                     {% if user.is_authenticated %}
                     <div class="actions">
                         <button onclick="Reply.show()" class="btn btn-primary">
@@ -72,16 +111,6 @@
                             <i class="fa fa-edit"></i> Editar
                         </button>
                         {% endif %}
-
-                        <!-- Reações -->
-                        <div class="reactions" id="reactions-container">
-                            {% for reacao in reacoes %}
-                            <button class="reaction {% if reacao.id == user_reaction.reacao.id %}active{% endif %}"
-                                onclick="Reactions.toggle('{{ reacao.id }}')">
-                                {{ reacao.nome }} ({{ reacao.count }})
-                            </button>
-                            {% endfor %}
-                        </div>
                     </div>
                     {% endif %}
                 </div>
@@ -132,7 +161,7 @@
 
             <div class="replies-container" id="replies-container">
                 {% for reply in replies %}
-                {% include 'posts/partials/reply_item.html' with reply=reply %}
+                    {% include 'posts/partials/reply_item.html' with reply=reply reacoes_disponiveis=reacoes_disponiveis user_reactions_replies=user_reactions_replies %}
                 {% endfor %}
             </div>
         </div>
@@ -154,6 +183,28 @@
 </div>
 
 {% block extra_js %}
+<script src="{% static 'js/components/reactions.js' %}"></script>
 <script src="{% static 'js/pages/post-detail.js' %}"></script>
+<script>
+    // Notificações específicas da página
+    document.addEventListener('DOMContentLoaded', function() {
+        // Notificar quando há novas respostas
+        const repliesContainer = document.getElementById('replies-container');
+        if (repliesContainer && repliesContainer.children.length > 0) {
+            const totalReplies = repliesContainer.children.length;
+            setTimeout(() => {
+                Notifications.info(`${totalReplies} resposta${totalReplies > 1 ? 's' : ''} encontrada${totalReplies > 1 ? 's' : ''}!`, 3000);
+            }, 1000);
+        }
+        
+        // Notificar sobre reações existentes
+        const reactionsSummary = document.querySelector('.reactions-summary');
+        if (reactionsSummary && reactionsSummary.children.length > 0) {
+            setTimeout(() => {
+                Notifications.info('Este post tem reações! Clique no botão para reagir também.', 4000);
+            }, 2000);
+        }
+    });
+</script>
 {% endblock %}
 {% endblock %}

@@ -103,10 +103,15 @@ class Postagem(models.Model):
 
     def get_reacoes_count(self):
         """Retorna contagem de reações agrupadas por tipo"""
-        return self.reacoes.values('reacao__nome').annotate(total=models.Count('id'))
+        from django.db.models import Count
+        return self.reacoes.values('reacao__nome', 'reacao__id', 'reacao__icone')\
+            .annotate(count=Count('id'))\
+            .order_by('reacao__ordem')
 
     def get_user_reaction(self, user):
         """Retorna a reação do usuário atual, se existir"""
+        if not user.is_authenticated:
+            return None
         return self.reacoes.filter(usuario=user).first()
 
     def __str__(self):
@@ -126,3 +131,31 @@ class Reply(models.Model):
 
     def __str__(self):
         return f'Reply de {self.autor} em {self.postagem}'
+    
+    def get_reacoes_count(self):
+        """Retorna contagem de reações agrupadas por tipo"""
+        from django.db.models import Count
+        return self.reacoes.values('reacao__nome', 'reacao__id', 'reacao__icone')\
+            .annotate(count=Count('id'))\
+            .order_by('reacao__ordem')
+
+    def get_user_reaction(self, user):
+        """Retorna a reação do usuário atual, se existir"""
+        if not user.is_authenticated:
+            return None
+        return self.reacoes.filter(usuario=user).first()
+    
+class ReacaoReply(models.Model):
+    """Registro de reações dos usuários nas respostas"""
+    reply = models.ForeignKey(Reply, related_name='reacoes', on_delete=models.CASCADE)
+    reacao = models.ForeignKey(Reacao, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['reply', 'usuario']
+        verbose_name = 'Reação em Reply'
+        verbose_name_plural = 'Reações em Replies'
+
+    def __str__(self):
+        return f'{self.usuario} reagiu com {self.reacao} em reply de {self.reply.postagem}'

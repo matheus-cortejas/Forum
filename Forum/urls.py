@@ -26,4 +26,9 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('', include('home.urls')),
     path('', include('core.urls')),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] 
+
+# Servir arquivos estáticos E de mídia em desenvolvimento
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)  # ADICIONAR ESTA LINHA

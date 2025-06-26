@@ -14,8 +14,8 @@ from .models import Usuario, VisitaPerfil
 class PerfilDetailView(DetailView):
     """View para exibir perfil de um usuário"""
     model = Usuario
-    template_name = 'accounts/perfil.html'
-    context_object_name = 'usuario_perfil'
+    template_name = 'accounts/profile.html'  # CORRIGIDO: usar profile.html
+    context_object_name = 'usuario'  # CORRIGIDO: usar 'usuario' em vez de 'usuario_perfil'
     slug_field = 'username'
     slug_url_kwarg = 'username'
     
@@ -24,20 +24,62 @@ class PerfilDetailView(DetailView):
         usuario_perfil = self.get_object()
         
         # Registrar a visita ao perfil
-        if self.request.user.is_authenticated:
+        if self.request.user.is_authenticated and self.request.user != usuario_perfil:
             VisitaPerfil.registrar_visita(usuario_perfil, self.request.user)
         
-        # Adicionar contexto adicional
-        context['ultimos_visitantes'] = usuario_perfil.visitas_recebidas.all()[:5]
-        context['total_seguidores'] = usuario_perfil.get_total_seguidores()
-        context['seguindo'] = self.request.user.is_authenticated and self.request.user.esta_seguindo(usuario_perfil)
+        # Buscar atividades recentes
+        try:
+            from posts.models import Post, Reply
+            # Últimas postagens do usuário
+            ultimas_postagens = Post.objects.filter(autor=usuario_perfil).order_by('-criado_em')[:5]
+            # Últimas respostas do usuário
+            ultimas_respostas = Reply.objects.filter(autor=usuario_perfil).order_by('-criado_em')[:5]
+            
+            # Combinar e ordenar atividades por data
+            atividades = []
+            
+            for post in ultimas_postagens:
+                atividades.append({
+                    'tipo': 'post',
+                    'titulo': post.titulo,
+                    'conteudo': post.conteudo[:150] + '...' if len(post.conteudo) > 150 else post.conteudo,
+                    'data': post.criado_em,
+                    'url': f'/posts/{post.assunto.categoria.slug}/{post.assunto.slug}/{post.id}/'
+                })
+                
+            for reply in ultimas_respostas:
+                if hasattr(reply, 'postagem'):
+                    atividades.append({
+                        'tipo': 'reply',
+                        'titulo': f'Comentou em: {reply.postagem.titulo}',
+                        'conteudo': reply.conteudo[:150] + '...' if len(reply.conteudo) > 150 else reply.conteudo,
+                        'data': reply.criado_em,
+                        'url': f'/posts/{reply.postagem.assunto.categoria.slug}/{reply.postagem.assunto.slug}/{reply.postagem.id}/'
+                    })
+            
+            # Ordenar por data (mais recentes primeiro)
+            atividades = sorted(atividades, key=lambda x: x['data'], reverse=True)[:10]
+            
+        except ImportError:
+            ultimas_postagens = []
+            ultimas_respostas = []
+            atividades = []
         
-        # Últimas atividades (posts, respostas, etc.)
-        from posts.models import Postagem, Reply
-        context['ultimas_postagens'] = Postagem.objects.filter(autor=usuario_perfil).order_by('-criado_em')[:5]
-        context['ultimas_respostas'] = Reply.objects.filter(autor=usuario_perfil).order_by('-criado_em')[:5]
+        # Adicionar contexto adicional
+        context.update({
+            'ultimos_visitantes': usuario_perfil.visitas_recebidas.all()[:5] if hasattr(usuario_perfil, 'visitas_recebidas') else [],
+            'total_seguidores': usuario_perfil.get_total_seguidores() if hasattr(usuario_perfil, 'get_total_seguidores') else 0,
+            'seguindo': self.request.user.is_authenticated and self.request.user.esta_seguindo(usuario_perfil) if hasattr(self.request.user, 'esta_seguindo') else False,
+            'ultimas_postagens': ultimas_postagens,
+            'ultimas_respostas': ultimas_respostas,
+            'atividades': atividades,
+            'data_cadastro': usuario_perfil.date_joined,
+            'ultimo_acesso': usuario_perfil.ultimo_acesso if hasattr(usuario_perfil, 'ultimo_acesso') else usuario_perfil.last_login,
+            'is_own_profile': self.request.user == usuario_perfil,
+        })
         
         return context
+    
 @login_required
 def seguir_usuario(request, username):
     """View para seguir/deixar de seguir um usuário"""
