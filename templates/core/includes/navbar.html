@@ -29,9 +29,13 @@
                     <a href="{% url 'members' %}">Membros</a>
                     <button type="button" class="dropdown-toggle">▼</button>
                     <div class="dropdown-menu" aria-hidden="true">
-                        <a href="{% url 'online' %}">Online agora</a>
+                        <a href="{% url 'online' %}">
+                            Online agora 
+                            {% if online_stats.total_online > 0 %}
+                                <span class="online-count">({{ online_stats.total_online }})</span>
+                            {% endif %}
+                        </a>
                          <a href="{% url 'search' %}">Procurar postagens de membro</a>
-// Colocar lógica de membros posteriormente
                     </div>
                 </li>
                 <li class="nav-item">

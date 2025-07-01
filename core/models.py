@@ -8,7 +8,9 @@ class UltimaAtividade(models.Model):
     TIPO_CHOICES = (
         ('NOVO_POST', 'Novo Post'),
         ('NOVA_REPLY', 'Nova Resposta'),
-        ('NOVA_REACAO', 'Nova Reação'),
+        ('NOVA_REACAO_POST', 'Nova Reação em Post'),
+        ('NOVA_REACAO_REPLY', 'Nova Reação em Reply'),
+        ('NOVO_THREAD', 'Novo Tópico'),
     )
 
     usuario = models.ForeignKey(
@@ -16,11 +18,20 @@ class UltimaAtividade(models.Model):
         on_delete=models.CASCADE,
         related_name='atividades'
     )
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    tipo = models.CharField(max_length=25, choices=TIPO_CHOICES)
     postagem = models.ForeignKey(
         Postagem,
         on_delete=models.CASCADE,
-        related_name='atividades'
+        related_name='atividades',
+        null=True,
+        blank=True
+    )
+    reply = models.ForeignKey(
+        'posts.Reply',
+        on_delete=models.CASCADE,
+        related_name='atividades',
+        null=True,
+        blank=True
     )
     reacao = models.ForeignKey(
         Reacao,
@@ -37,7 +48,35 @@ class UltimaAtividade(models.Model):
         verbose_name_plural = 'Últimas Atividades'
 
     def __str__(self):
-        return f'{self.usuario} {self.get_tipo_display()} em {self.postagem}'
+        return f'{self.usuario} {self.get_tipo_display()}'
+
+    def get_target_object(self):
+        """Retorna o objeto alvo da atividade (postagem ou reply)"""
+        if self.reply:
+            return self.reply
+        return self.postagem
+
+    def get_target_post(self):
+        """Retorna sempre a postagem principal (thread ou post)"""
+        if self.reply:
+            return self.reply.postagem
+        return self.postagem
+
+    def get_narrative_text(self):
+        """Retorna texto narrativo para a atividade"""
+        target_post = self.get_target_post()
+        
+        if self.tipo == 'NOVO_THREAD':
+            return f"criou um novo tópico"
+        elif self.tipo == 'NOVO_POST':
+            return f"criou um novo post"
+        elif self.tipo == 'NOVA_REPLY':
+            return f"respondeu no tópico"
+        elif self.tipo == 'NOVA_REACAO_POST':
+            return f"reagiu com {self.reacao.nome} ao post"
+        elif self.tipo == 'NOVA_REACAO_REPLY':
+            return f"reagiu com {self.reacao.nome} à resposta"
+        return f"realizou uma atividade"
 
     def tempo_relativo(self):
         """Retorna tempo em formato relativo (ex: '5 minutos atrás')"""

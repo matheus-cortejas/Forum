@@ -1,6 +1,10 @@
 {% extends "core/base.html" %}
 {% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/members.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="forum-wrapper">
     <aside class="forum-sidebar members-sidebar">
@@ -51,7 +55,7 @@
             <div class="section-content">
                 <form method="get" action="/accounts/members/">
                     <div class="input-group">
-                        <input type="text" class="form-control" name="busca" placeholder="Nome de usuário..." value="">
+                        <input type="text" class="form-control" name="busca" placeholder="Nome de usuário..." value="{{ busca_termo|default:'' }}">
                         <button class="btn-search" type="submit">
                             <i class="fas fa-search"></i>
                         </button>
@@ -65,9 +69,23 @@
                 <h3>Novos membros</h3>
             </div>
             <div class="section-content">
-                <div class="no-members">
-                    <p class="text-muted">Nenhum novo membro ainda</p>
-                </div>
+                {% if novos_membros %}
+                    {% for membro in novos_membros %}
+                    <div class="novo-membro">
+                        <div class="membro-avatar">
+                            <img src="{{ membro.get_avatar_url }}" alt="{{ membro.username }}" class="avatar">
+                        </div>
+                        <div class="membro-info">
+                            <a href="{% url 'perfil' membro.username %}" class="username">{{ membro.get_display_name }}</a>
+                            <div class="data-cadastro text-muted">{{ membro.date_joined|date:"d/m/Y" }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-members">
+                        <p class="text-muted">Nenhum novo membro nos últimos 7 dias</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </aside>
@@ -80,99 +98,177 @@
                 <section class="members-table">
                     <h2>Mais mensagens</h2>
                     <ul>
+                        {% for member in mais_mensagens %}
                         <li>
-                            <span class="avatar"></span>
-                            <span class="username">Usuário1</span>
-                            <span class="stat">178,851</span>
+                            <span class="avatar">
+                                <img src="{{ member.get_avatar_url }}" alt="{{ member.username }}" class="avatar-img">
+                            </span>
+                            <span class="username">
+                                <a href="{% url 'perfil' member.username %}">{{ member.get_display_name }}</a>
+                            </span>
+                            <span class="stat">{{ member.total_itens|default:0 }}</span>
                         </li>
-                        <li>
-                            <span class="avatar"></span>
-                            <span class="username">Usuário2</span>
-                            <span class="stat">128,807</span>
-                        </li>
-                        <!-- ... -->
+                        {% empty %}
+                        <li>Nenhum membro encontrado</li>
+                        {% endfor %}
                     </ul>
                 </section>
+                
                 <section class="members-table">
                     <h2>Mais mensagens hoje</h2>
                     <ul>
+                        {% for member in mais_hoje %}
                         <li>
-                            <span class="avatar"></span>
-                            <span class="username">Usuário3</span>
-                            <span class="stat">12</span>
+                            <span class="avatar">
+                                <img src="{{ member.get_avatar_url }}" alt="{{ member.username }}" class="avatar-img">
+                            </span>
+                            <span class="username">
+                                <a href="{% url 'perfil' member.username %}">{{ member.get_display_name }}</a>
+                            </span>
+                            <span class="stat">{{ member.mensagens_hoje|default:0 }}</span>
                         </li>
-                        <!-- ... -->
+                        {% empty %}
+                        <li>Nenhum membro postou hoje</li>
+                        {% endfor %}
                     </ul>
                 </section>
+                
                 <section class="members-table">
                     <h2>Maior pontuação de reação</h2>
                     <ul>
+                        {% for member in mais_reacoes %}
                         <li>
-                            <span class="avatar"></span>
-                            <span class="username">Usuário4</span>
-                            <span class="stat">21,571</span>
+                            <span class="avatar">
+                                <img src="{{ member.get_avatar_url }}" alt="{{ member.username }}" class="avatar-img">
+                            </span>
+                            <span class="username">
+                                <a href="{% url 'perfil' member.username %}">{{ member.get_display_name }}</a>
+                            </span>
+                            <span class="stat">{{ member.reputacao|default:0 }}</span>
                         </li>
-                        <!-- ... -->
+                        {% empty %}
+                        <li>Nenhum membro encontrado</li>
+                        {% endfor %}
                     </ul>
                 </section>
+                
                 <section class="members-table">
                     <h2>Mais mensagens este mês</h2>
                     <ul>
+                        {% for member in mais_mes %}
                         <li>
-                            <span class="avatar"></span>
-                            <span class="username">Usuário4</span>
-                            <span class="stat">409</span>
+                            <span class="avatar">
+                                <img src="{{ member.get_avatar_url }}" alt="{{ member.username }}" class="avatar-img">
+                            </span>
+                            <span class="username">
+                                <a href="{% url 'perfil' member.username %}">{{ member.get_display_name }}</a>
+                            </span>
+                            <span class="stat">{{ member.mensagens_mes|default:0 }}</span>
                         </li>
+                        {% empty %}
+                        <li>Nenhum membro encontrado</li>
+                        {% endfor %}
                     </ul>
                 </section>
+                
                 <section class="members-table">
                     <h2>Mais mensagens esta semana</h2>
                     <ul>
+                        {% for member in mais_semana %}
                         <li>
-                            <span class="avatar"></span>
-                            <span class="username">Usuário5</span>
-                            <span class="stat">32</span>
+                            <span class="avatar">
+                                <img src="{{ member.get_avatar_url }}" alt="{{ member.username }}" class="avatar-img">
+                            </span>
+                            <span class="username">
+                                <a href="{% url 'perfil' member.username %}">{{ member.get_display_name }}</a>
+                            </span>
+                            <span class="stat">{{ member.mensagens_semana|default:0 }}</span>
                         </li>
+                        {% empty %}
+                        <li>Nenhum membro encontrado</li>
+                        {% endfor %}
                     </ul>
                 </section>
+                
                 <section class="members-table">
                     <h2>Aniversariantes</h2>
                     <ul>
+                        {% for member in aniversariantes %}
                         <li>
-                            <span class="avatar"></span>
-                            <span class="username">Usuário6</span>
-                            <span class="stat">215</span>
+                            <span class="avatar">
+                                <img src="{{ member.get_avatar_url }}" alt="{{ member.username }}" class="avatar-img">
+                            </span>
+                            <span class="username">
+                                <a href="{% url 'perfil' member.username %}">{{ member.get_display_name }}</a>
+                            </span>
+                            <span class="stat">
+                                {% if member.data_nascimento %}
+                                    {{ member.data_nascimento|date:"d/m" }}
+                                {% else %}
+                                    Aniversário
+                                {% endif %}
+                            </span>
                         </li>
+                        {% empty %}
+                        <li>Nenhum aniversariante hoje</li>
+                        {% endfor %}
                     </ul>
                 </section>
+                
                 <section class="members-table">
                     <h2>Mais soluções</h2>
                     <ul>
+                        {% for member in mais_solucoes %}
                         <li>
-                            <span class="avatar"></span>
-                            <span class="username">Usuário8</span>
-                            <span class="stat">25,206</span>
+                            <span class="avatar">
+                                <img src="{{ member.get_avatar_url }}" alt="{{ member.username }}" class="avatar-img">
+                            </span>
+                            <span class="username">
+                                <a href="{% url 'perfil' member.username %}">{{ member.get_display_name }}</a>
+                            </span>
+                            <span class="stat">{{ member.answers|default:0 }}</span>
                         </li>
+                        {% empty %}
+                        <li>Nenhum membro encontrado</li>
+                        {% endfor %}
                     </ul>
                 </section>
+                
                 <section class="members-table">
                     <h2>Membros do staff</h2>
                     <ul>
+                        {% for member in staff %}
                         <li>
-                            <span class="avatar"></span>
-                            <span class="username">Usuário9</span>
+                            <span class="avatar">
+                                <img src="{{ member.get_avatar_url }}" alt="{{ member.username }}" class="avatar-img">
+                            </span>
+                            <span class="username">
+                                <a href="{% url 'perfil' member.username %}">{{ member.get_display_name }}</a>
+                            </span>
                             <span class="stat">Staff</span>
                         </li>
+                        {% empty %}
+                        <li>Nenhum membro do staff</li>
+                        {% endfor %}
                     </ul>
                 </section>
+                
                 <section class="members-table">
                     <h2>Moderadores</h2>
                     <ul>
+                        {% for member in moderadores %}
                         <li>
-                            <span class="avatar"></span>
-                            <span class="username">Usuário10</span>
+                            <span class="avatar">
+                                <img src="{{ member.get_avatar_url }}" alt="{{ member.username }}" class="avatar-img">
+                            </span>
+                            <span class="username">
+                                <a href="{% url 'perfil' member.username %}">{{ member.get_display_name }}</a>
+                            </span>
                             <span class="stat">Moderador</span>
                         </li>
+                        {% empty %}
+                        <li>Nenhum moderador</li>
+                        {% endfor %}
                     </ul>
                 </section>
             </div>

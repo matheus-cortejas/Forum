@@ -128,6 +128,18 @@
   padding-left: 20px;
 }
 
+/* Online counter in dropdown */
+.online-count {
+  color: var(--color-primary, #e53935) !important;
+  font-weight: bold;
+  font-size: 12px;
+  margin-left: 5px;
+}
+
+.dropdown-menu a:hover .online-count {
+  color: var(--color-primary) !important;
+}
+
 .dropdown-menu li {
   list-style: none;
 }

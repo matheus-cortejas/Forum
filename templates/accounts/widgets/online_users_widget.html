@@ -1,0 +1,162 @@
+{% load static %}
+<div class="online-users-widget">
+    <div class="widget-header">
+        <h4>
+            <i class="fas fa-circle" style="color: #4caf50; font-size: 8px;"></i>
+            Online Agora ({{ total_count }})
+        </h4>
+        <a href="{% url 'online' %}" class="view-all-link">Ver todos</a>
+    </div>
+    
+    <div class="widget-content">
+        {% if members %}
+        <div class="online-section">
+            <h5>Membros ({{ members|length }})</h5>
+            <div class="online-users-list">
+                {% for member in members %}
+                <div class="online-user-item">
+                    <img src="{{ member.usuario.get_avatar_url }}" alt="{{ member.usuario.username }}" class="user-avatar">
+                    <div class="user-info">
+                        <a href="{% url 'perfil' member.usuario.username %}" class="username">
+                            {{ member.usuario.get_display_name }}
+                        </a>
+                        <div class="user-status">{{ member.ultima_atividade|time_since_activity }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if guests %}
+        <div class="online-section">
+            <h5>Visitantes ({{ guests|length }})</h5>
+            <div class="guests-count">{{ guests|length }} visitante{{ guests|length|pluralize }}</div>
+        </div>
+        {% endif %}
+        
+        {% if bots %}
+        <div class="online-section">
+            <h5>Bots ({{ bots|length }})</h5>
+            <div class="bots-list">
+                {% for bot in bots %}
+                <span class="bot-name">{{ bot.bot_name|default:"Bot" }}</span>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if not members and not guests and not bots %}
+        <div class="empty-state">
+            <p>Nenhum usuário online no momento</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.online-users-widget {
+    background: var(--color-dark-2, #232428);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--color-dark-3, #292b31);
+    padding-bottom: 8px;
+}
+
+.widget-header h4 {
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-text, #e0e0e0);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.view-all-link {
+    font-size: 12px;
+    color: var(--color-primary, #e53935);
+    text-decoration: none;
+}
+
+.view-all-link:hover {
+    text-decoration: underline;
+}
+
+.online-section {
+    margin-bottom: 12px;
+}
+
+.online-section h5 {
+    font-size: 12px;
+    color: #bbb;
+    margin: 0 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.online-users-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.online-user-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #35363b;
+}
+
+.user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.username {
+    color: var(--color-primary, #e53935);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    display: block;
+}
+
+.username:hover {
+    text-decoration: underline;
+}
+
+.user-status {
+    font-size: 11px;
+    color: #888;
+}
+
+.guests-count, .bots-list {
+    font-size: 13px;
+    color: #ccc;
+}
+
+.bot-name {
+    color: #4caf50;
+}
+
+.empty-state {
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+    padding: 20px 0;
+}
+</style>

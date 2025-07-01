@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from datetime import timedelta
 
 class CargoMembro(models.Model):
     """Modelo para definir cargos e permissões de membros"""
@@ -115,6 +116,16 @@ class Usuario(AbstractUser):
         """Retorna o número de usuários seguidos"""
         return self.seguindo.count()
     
+    def get_avatar_url(self):
+        """Retorna a URL do avatar ou imagem padrão"""
+        if self.avatar and hasattr(self.avatar, 'url'):
+            return self.avatar.url
+        return '/static/images/default-avatar.png'
+    
+    def get_display_name(self):
+        """Retorna o nome de exibição (apelido ou username)"""
+        return self.apelido or self.username
+    
     def __str__(self):
         return self.username
 
@@ -150,6 +161,74 @@ class VisitaPerfil(models.Model):
                     usuario_visitado=usuario_visitado,
                     visitante=visitante
                 )
+
+class UsuarioOnline(models.Model):
+    """Rastreia usuários ativos no sistema"""
+    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, null=True, blank=True)
+    session_key = models.CharField(max_length=40, unique=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    ultima_atividade = models.DateTimeField(auto_now=True)
+    is_authenticated = models.BooleanField(default=False)
+    pagina_atual = models.CharField(max_length=255, blank=True)
+    
+    # Detecção de bots
+    is_bot = models.BooleanField(default=False)
+    bot_name = models.CharField(max_length=100, blank=True)
+    
+    class Meta:
+        verbose_name = "Usuário Online"
+        verbose_name_plural = "Usuários Online"
+        ordering = ['-ultima_atividade']
+    
+    @staticmethod
+    def get_online_count():
+        """Retorna contagem de usuários online (últimos 15 minutos)"""
+        cutoff_time = timezone.now() - timedelta(minutes=15)
+        return UsuarioOnline.objects.filter(ultima_atividade__gte=cutoff_time).count()
+    
+    @staticmethod
+    def get_members_online_count():
+        """Retorna contagem de membros autenticados online"""
+        cutoff_time = timezone.now() - timedelta(minutes=15)
+        return UsuarioOnline.objects.filter(
+            ultima_atividade__gte=cutoff_time,
+            is_authenticated=True,
+            is_bot=False
+        ).count()
+    
+    @staticmethod
+    def get_guests_online_count():
+        """Retorna contagem de visitantes online"""
+        cutoff_time = timezone.now() - timedelta(minutes=15)
+        return UsuarioOnline.objects.filter(
+            ultima_atividade__gte=cutoff_time,
+            is_authenticated=False,
+            is_bot=False
+        ).count()
+    
+    @staticmethod
+    def get_bots_online_count():
+        """Retorna contagem de bots online"""
+        cutoff_time = timezone.now() - timedelta(minutes=15)
+        return UsuarioOnline.objects.filter(
+            ultima_atividade__gte=cutoff_time,
+            is_bot=True
+        ).count()
+    
+    @staticmethod
+    def cleanup_old_sessions():
+        """Remove sessões antigas (mais de 30 minutos)"""
+        cutoff_time = timezone.now() - timedelta(minutes=30)
+        UsuarioOnline.objects.filter(ultima_atividade__lt=cutoff_time).delete()
+    
+    def __str__(self):
+        if self.is_bot:
+            return f"Bot: {self.bot_name}"
+        elif self.usuario:
+            return f"Membro: {self.usuario.username}"
+        else:
+            return "Visitante"
 
 # Atualizar estatísticas quando um post é criado
 @receiver(post_save, sender='posts.Postagem')

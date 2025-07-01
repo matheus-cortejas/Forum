@@ -9,13 +9,59 @@ def forum_stats(request):
     
     online_record = 8000
 
-    # Simulação de usuários online
-    online_members = [
-        {'username': 'Admin1', 'role': 'admin'},
-        {'username': 'Mod1', 'role': 'moderator'},
-        {'username': 'VIPUser', 'role': 'vip'},
-        {'username': 'RegularUser', 'role': 'user'},    ]
-    online_guests = 45  # Simulado
+    # Obter usuários online reais
+    try:
+        from accounts.models import UsuarioOnline
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        # Tempo limite para considerar online (15 minutos)
+        cutoff_time = timezone.now() - timedelta(minutes=15)
+        
+        # Buscar usuários autenticados online
+        online_members_queryset = UsuarioOnline.objects.filter(
+            ultima_atividade__gte=cutoff_time,
+            is_authenticated=True,
+            is_bot=False,
+            usuario__isnull=False
+        ).select_related('usuario')[:10]  # Limitar a 10 para performance
+        
+        # Preparar lista de membros online
+        online_members = []
+        for user_online in online_members_queryset:
+            if user_online.usuario:
+                # Determinar role baseado no status do usuário
+                if user_online.usuario.is_superuser:
+                    role = 'admin'
+                elif user_online.usuario.is_staff:
+                    role = 'staff'
+                elif hasattr(user_online.usuario, 'cargos') and user_online.usuario.cargos.filter(pode_moderar=True).exists():
+                    role = 'moderator'
+                else:
+                    role = 'user'
+                
+                online_members.append({
+                    'username': user_online.usuario.get_display_name(),
+                    'role': role,
+                    'user_obj': user_online.usuario,
+                })
+        
+        # Contar visitantes online
+        online_guests = UsuarioOnline.objects.filter(
+            ultima_atividade__gte=cutoff_time,
+            is_authenticated=False,
+            is_bot=False
+        ).count()
+        
+    except ImportError:
+        # Fallback para dados simulados se o modelo não existir
+        online_members = [
+            {'username': 'Admin1', 'role': 'admin'},
+            {'username': 'Mod1', 'role': 'moderator'},
+            {'username': 'VIPUser', 'role': 'vip'},
+            {'username': 'RegularUser', 'role': 'user'},
+        ]
+        online_guests = 45
 
     return {
         'trending_threads': Postagem.objects.filter(tipo='THREAD').select_related('autor', 'assunto', 'tag_sistema').prefetch_related('tags_especificas').order_by('-visualizacoes')[:5],
@@ -97,3 +143,35 @@ def filtros_forum(request):
             {'value': 'atividade', 'label': 'Atividade Recente'},
         ]
     }
+
+def online_stats(request):
+    """Context processor para estatísticas de usuários online"""
+    try:
+        from accounts.models import UsuarioOnline
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        # Tempo limite para considerar online (15 minutos)
+        cutoff_time = timezone.now() - timedelta(minutes=15)
+        
+        # Contar usuários online por categoria
+        online_queryset = UsuarioOnline.objects.filter(ultima_atividade__gte=cutoff_time)
+        
+        online_stats = {
+            'total_online': online_queryset.count(),
+            'members_online': online_queryset.filter(is_authenticated=True, is_bot=False).count(),
+            'guests_online': online_queryset.filter(is_authenticated=False, is_bot=False).count(),
+            'bots_online': online_queryset.filter(is_bot=True).count(),
+        }
+        
+        return {'online_stats': online_stats}
+    except:
+        # Fallback caso o modelo não exista ainda
+        return {
+            'online_stats': {
+                'total_online': 0,
+                'members_online': 0,
+                'guests_online': 0,
+                'bots_online': 0,
+            }
+        }

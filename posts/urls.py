@@ -27,4 +27,7 @@ urlpatterns = [
     # Sistema de replies
     path('<slug:categoria_slug>/<slug:assunto_slug>/<int:postagem_id>/reply/', 
          views.add_reply, name='add_reply'),
+
+    # API endpoints
+    path('api/atividades-stats/', views.ultimas_atividades_stats, name='atividades_stats'),
 ]

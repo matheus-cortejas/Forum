@@ -16,5 +16,6 @@ urlpatterns = [
 
     # Membros
     path('members/', views.members, name='members'),
+    path('members/list/', views.members_list, name='members_list'),
     path('online/', views.online, name='online'),
 ]

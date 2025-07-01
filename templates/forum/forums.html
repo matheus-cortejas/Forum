@@ -1,5 +1,11 @@
 {% extends "core/base.html" %}
 {% load static %}
+{% load core_extras %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/atividades_widget.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="forum-wrapper">
     <div class="forum-main">
@@ -56,14 +62,27 @@
         <!-- Forum Info -->
         <div class="forum-info">
             <div class="online-users-info">
-                <h3>Who's Online <a href="#" class="view-all">(View All)</a></h3>
+                <h3>Who's Online 
+                    <span class="live-indicator" title="Dados em tempo real">●</span>
+                    <a href="{% url 'online' %}" class="view-all">(View All)</a>
+                </h3>
                 <div class="online-stats">
                     <p>Members online: <strong>{{ forum_stats.online_members|length }}</strong> • Guests online:
-                        <strong>{{ forum_stats.online_guests }}</strong></p>
+                        <strong>{{ forum_stats.online_guests }}</strong>
+                        {% if online_stats.bots_online > 0 %}
+                        • Bots: <strong>{{ online_stats.bots_online }}</strong>
+                        {% endif %}
+                    </p>
                 </div>
                 <div class="online-members">
                     {% for member in forum_stats.online_members %}
-                    <a href="#" class="user-link {{ member.role }}">{{ member.username }}</a>{% if not forloop.last%},{%endif %}
+                    {% if member.user_obj %}
+                        <a href="{% url 'perfil' member.user_obj.username %}" class="user-link {{ member.role }}" title="{{ member.role|title }}">{{ member.username }}</a>{% if not forloop.last %}, {% endif %}
+                    {% else %}
+                        <span class="user-link {{ member.role }}" title="{{ member.role|title }}">{{ member.username }}</span>{% if not forloop.last %}, {% endif %}
+                    {% endif %}
+                    {% empty %}
+                    <span class="text-muted">Nenhum membro online no momento</span>
                     {% endfor %}
                 </div>
             </div>
@@ -99,6 +118,9 @@
                 </ul>
             </div>
         </div>
+
+        <!-- Atividades Recentes -->
+        {% atividades_recentes_widget 10 %}
 
         <!-- Recent Posts -->
         <div class="sidebar-section">

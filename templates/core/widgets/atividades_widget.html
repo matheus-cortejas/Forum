@@ -1,0 +1,61 @@
+{% load static %}
+{% load core_extras %}
+
+<div class="atividades-widget">
+    <div class="widget-header">
+        <h3><i class="fa fa-feed"></i> Atividades Recentes</h3>
+        <a href="{% url 'novidades' %}" class="ver-todas">Ver todas</a>
+    </div>
+    
+    <div class="atividades-list">
+        {% for atividade in atividades_recentes %}
+        <div class="atividade-widget-item" data-tipo="{{ atividade.tipo }}">
+            <div class="atividade-widget-avatar">
+                {% if atividade.usuario.avatar %}
+                    <img src="{{ atividade.usuario.avatar.url }}" alt="{{ atividade.usuario.username }}">
+                {% else %}
+                    <div class="avatar-widget-default">
+                        {{ atividade.usuario.username|first|upper }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="atividade-widget-content">
+                <div class="atividade-widget-text">
+                    <a href="{% url 'accounts:perfil' atividade.usuario.username %}" 
+                       class="user-widget-link {{ atividade.usuario|get_user_role_class }}">
+                        {{ atividade.usuario.username }}
+                    </a>
+                    {{ atividade.get_narrative_text }}
+                    
+                    {% if atividade.get_target_post %}
+                        <a href="{% url 'postagem_detail' atividade.get_target_post.assunto.categoria.slug atividade.get_target_post.assunto.slug atividade.get_target_post.id %}" 
+                           class="topic-widget-link">"{{ atividade.get_target_post.titulo|truncatechars:50 }}"</a>
+                    {% endif %}
+                </div>
+                
+                <div class="atividade-widget-time">
+                    {{ atividade.criado_em|tempo_relativo }}
+                </div>
+            </div>
+
+            <div class="atividade-widget-icon">
+                {% if atividade.tipo == 'NOVO_THREAD' %}
+                    <i class="fa fa-comment" title="Novo Tópico"></i>
+                {% elif atividade.tipo == 'NOVA_REPLY' %}
+                    <i class="fa fa-reply" title="Nova Resposta"></i>
+                {% elif atividade.tipo == 'NOVO_POST' %}
+                    <i class="fa fa-file-text" title="Novo Post"></i>
+                {% elif atividade.tipo == 'NOVA_REACAO_POST' or atividade.tipo == 'NOVA_REACAO_REPLY' %}
+                    <i class="fa fa-heart" title="Nova Reação"></i>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="no-atividades-widget">
+            <i class="fa fa-inbox"></i>
+            <span>Nenhuma atividade recente</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>

@@ -1,6 +1,230 @@
 {% extends "core/base.html" %}
 {% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'novo_css/06-components/members.css' %}">
+<style>
+/* Estilos específicos para a página online */
+.online-main {
+    padding: 20px;
+}
+
+.online-table {
+    background: var(--color-dark-2, #232428);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.online-tabs {
+    display: flex;
+    background: var(--color-dark-3, #292b31);
+    border-bottom: 1px solid var(--color-dark-4, #35363b);
+}
+
+.online-tabs .tab {
+    background: none;
+    border: none;
+    color: var(--color-text, #e0e0e0);
+    padding: 15px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+}
+
+.online-tabs .tab:hover {
+    background: var(--color-dark-4, #35363b);
+}
+
+.online-tabs .tab.active {
+    color: var(--color-primary, #e53935);
+    border-bottom-color: var(--color-primary, #e53935);
+    background: var(--color-dark-4, #35363b);
+}
+
+.online-list {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.online-row {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--color-dark-3, #292b31);
+    gap: 15px;
+}
+
+.online-row:last-child {
+    border-bottom: none;
+}
+
+.online-row:hover {
+    background: var(--color-dark-3, #292b31);
+}
+
+.online-avatar .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #35363b;
+    border: 2px solid var(--color-dark-3, #292b31);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.online-avatar .bot-avatar {
+    background: linear-gradient(135deg, #4caf50, #2e7d32);
+    color: white;
+    font-size: 18px;
+}
+
+.online-avatar .guest-avatar {
+    background: linear-gradient(135deg, #607d8b, #455a64);
+    color: white;
+    font-size: 16px;
+}
+
+.online-info {
+    flex: 1;
+}
+
+.online-name {
+    display: block;
+    font-size: 14px;
+    color: var(--color-text, #e0e0e0);
+    margin-bottom: 3px;
+}
+
+.online-name a {
+    color: var(--color-primary, #e53935);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.online-name a:hover {
+    text-decoration: underline;
+}
+
+.robot-name {
+    color: var(--color-accent, #4caf50);
+    font-weight: 500;
+}
+
+.online-action {
+    font-size: 13px;
+    color: #bbb;
+}
+
+.online-sidebar {
+    background: var(--color-dark-2, #232428);
+    border-radius: 8px;
+    padding: 0;
+    height: fit-content;
+}
+
+.online-stats {
+    padding: 15px;
+}
+
+.online-stats > div {
+    margin-bottom: 8px;
+    color: var(--color-text, #e0e0e0);
+    font-size: 14px;
+}
+
+.online-stats b {
+    color: var(--color-primary, #e53935);
+    font-weight: 600;
+}
+
+.online-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #888;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column !important;
+        gap: 20px !important;
+    }
+    
+    .online-table {
+        flex: none !important;
+    }
+    
+    .online-sidebar {
+        flex: none !important;
+        min-width: auto !important;
+    }
+}
+
+/* Auto-refresh indicator */
+.auto-refresh-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--color-primary, #e53935);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.auto-refresh-indicator.show {
+    opacity: 1;
+}
+</style>
+
+<script>
+// Auto-refresh da página a cada 30 segundos
+let refreshInterval;
+let refreshCountdown = 30;
+
+function startAutoRefresh() {
+    // Indicador de refresh
+    const indicator = document.createElement('div');
+    indicator.className = 'auto-refresh-indicator';
+    indicator.id = 'refresh-indicator';
+    document.body.appendChild(indicator);
+    
+    function updateCountdown() {
+        if (refreshCountdown > 0) {
+            indicator.textContent = `Auto-refresh em ${refreshCountdown}s`;
+            indicator.classList.add('show');
+            refreshCountdown--;
+            setTimeout(updateCountdown, 1000);
+        } else {
+            indicator.textContent = 'Atualizando...';
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+        }
+    }
+    
+    updateCountdown();
+}
+
+// Iniciar auto-refresh após 5 segundos na página
+setTimeout(startAutoRefresh, 5000);
+
+// Pausar auto-refresh quando o usuário está interagindo
+document.addEventListener('click', function() {
+    refreshCountdown = Math.max(refreshCountdown, 10);
+});
+
+document.addEventListener('scroll', function() {
+    refreshCountdown = Math.max(refreshCountdown, 15);
+});
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="forum-wrapper">
     <main class="forum-main online-main">
@@ -8,56 +232,78 @@
             <!-- Lista de online -->
             <div class="online-table" style="flex:2;">
                 <div class="online-tabs">
-                    <button class="tab active">Todos</button>
-                    <button class="tab">Membros</button>
-                    <button class="tab">Visitantes</button>
-                    <button class="tab">Robôs</button>
+                    <button class="tab {% if current_tab == 'all' or not current_tab %}active{% endif %}" 
+                            onclick="window.location.href='?tab=all'">
+                        Todos ({{ stats.total_online }})
+                    </button>
+                    <button class="tab {% if current_tab == 'members' %}active{% endif %}"
+                            onclick="window.location.href='?tab=members'">
+                        Membros ({{ stats.members_online }})
+                    </button>
+                    <button class="tab {% if current_tab == 'guests' %}active{% endif %}"
+                            onclick="window.location.href='?tab=guests'">
+                        Visitantes ({{ stats.guests_online }})
+                    </button>
+                    <button class="tab {% if current_tab == 'bots' %}active{% endif %}"
+                            onclick="window.location.href='?tab=bots'">
+                        Robôs ({{ stats.bots_online }})
+                    </button>
                 </div>
                 <div class="online-list">
-                    <!-- Exemplo de linha: -->
+                    {% for item in online_list %}
                     <div class="online-row">
                         <div class="online-avatar">
-                            <img src="{% static 'images/default-avatar.png' %}" alt="Avatar" class="avatar">
+                            {% if item.user_online.is_bot %}
+                                <div class="avatar bot-avatar">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                            {% elif item.user_online.usuario %}
+                                <img src="{{ item.user_online.usuario.get_avatar_url }}" alt="{{ item.user_online.usuario.username }}" class="avatar">
+                            {% else %}
+                                <div class="avatar guest-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="online-info">
-                            <span class="online-name"><b>Robô:</b> <span class="robot-name">Bing</span></span>
-                            <div class="online-action text-muted">Searching • 1 minuto atrás</div>
+                            {% if item.user_online.is_bot %}
+                                <span class="online-name"><b>Robô:</b> <span class="robot-name">{{ item.user_online.bot_name|default:"Bot" }}</span></span>
+                            {% elif item.user_online.usuario %}
+                                <span class="online-name">
+                                    <a href="{% url 'perfil' item.user_online.usuario.username %}">{{ item.user_online.usuario.get_display_name }}</a>
+                                    {% if item.user_online.usuario.is_staff %}
+                                        <span style="color: #ffa726; font-size: 12px;">[Staff]</span>
+                                    {% endif %}
+                                </span>
+                            {% else %}
+                                <span class="online-name"><b>Visitante</b></span>
+                            {% endif %}
+                            <div class="online-action text-muted">{{ item.action }} • {{ item.last_seen }}</div>
                         </div>
                     </div>
-                    <div class="online-row">
-                        <div class="online-avatar">
-                            <img src="{% static 'images/default-avatar.png' %}" alt="Avatar" class="avatar">
-                        </div>
-                        <div class="online-info">
-                            <span class="online-name"><b>Visitante</b></span>
-                            <div class="online-action text-muted">Visualizando o fórum <b>OFERTAS</b> • 1 minuto atrás</div>
-                        </div>
+                    {% empty %}
+                    <div class="online-empty">
+                        <p>Nenhum usuário online no momento</p>
                     </div>
-                    <div class="online-row">
-                        <div class="online-avatar">
-                            <img src="{% static 'images/default-avatar.png' %}" alt="Avatar" class="avatar">
-                        </div>
-                        <div class="online-info">
-                            <span class="online-name"><b>Visitante</b></span>
-                            <div class="online-action text-muted">Visualizando o tópico <span style="color:#e53935;">NVIDIA GeForce RTX 3XXX</span> • 1 minuto atrás</div>
-                        </div>
-                    </div>
-                    <!-- Adicione mais linhas fictícias conforme desejar -->
+                    {% endfor %}
                 </div>
             </div>
             <!-- Estatísticas -->
             <aside class="online-sidebar" style="flex:1; min-width:220px;">
                 <div class="sidebar-section">
                     <div class="section-header">
-                        <h3>Online statistics</h3>
+                        <h3>Estatísticas Online</h3>
                     </div>
                     <div class="section-content">
                         <div class="online-stats">
-                            <div>Membros Online: <b>101</b></div>
-                            <div>Visitantes Online: <b>455</b></div>
-                            <div>Total de Visitantes: <b>556</b></div>
-                            <div class="text-muted" style="font-size:0.95em; margin-top:8px;">
-                                O resultado final pode incluir visitantes ocultos.
+                            <div>Membros Online: <b>{{ stats.members_online }}</b></div>
+                            <div>Visitantes Online: <b>{{ stats.guests_online }}</b></div>
+                            <div>Robôs Online: <b>{{ stats.bots_online }}</b></div>
+                            <div style="border-top: 1px solid #35363b; padding-top: 8px; margin-top: 8px;">
+                                Total Online: <b>{{ stats.total_online }}</b>
+                            </div>
+                            <div class="text-muted" style="font-size:0.95em; margin-top:12px; line-height: 1.4;">
+                                Usuários ativos nos últimos 15 minutos. O resultado pode incluir visitantes ocultos.
                             </div>
                         </div>
                     </div>

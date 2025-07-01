@@ -1,107 +1,312 @@
 {% extends "core/base.html" %}
 {% load static %}
+{% load core_extras %}
+
+{% block title %}Últimas Atividades - MyForum{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/atividades.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container">
-    <!--Navigation-->
+    <!-- Navigation -->
     <div class="navigate">
         <span><a href="{% url 'home' %}">MyForum - Forums</a> >> <a href="">Últimas Atividades</a></span>
     </div>
-    <!-- Painel de Filtros -->
-    {% include 'forum/partials/filtro.html' %}
-    <!-- Informações dos Filtros Ativos -->
-    {% if filtros_ativos.tipo != 'all' or filtros_ativos.prefixo or filtros_ativos.tags or filtros_ativos.autor or filtros_ativos.ordem != 'recente' %}
-    <div class="filter-results-info">
-        <p>Filtros ativos:
-            {% if filtros_ativos.tipo and filtros_ativos.tipo != 'all' %} <b>Tipo:</b> {{ filtros_ativos.tipo }} {% endif %}
-            {% if filtros_ativos.prefixo %} <b>Prefixo:</b> {{ filtros_ativos.prefixo }} {% endif %}
-            {% if filtros_ativos.tags %} <b>Tags:</b> {{ filtros_ativos.tags }} {% endif %}
-            {% if filtros_ativos.autor %} <b>Autor:</b> {{ filtros_ativos.autor }} {% endif %}
-            {% if filtros_ativos.ordem and filtros_ativos.ordem != 'recente' %} <b>Ordem:</b> {{ filtros_ativos.ordem }} {% endif %}
-            <a href="?" class="filter-clear-all">Limpar filtros</a>
-        </p>
-    </div>
-    {% endif %}
-    <!--Display posts table-->
-    <div class="posts-table">
-        <div class="table-head">
-            <div class="status">Status</div>
-            <div class="subjects">Assuntos</div>
-            <div class="replies">Respostas/Visualizações</div>
-            <div class="last-reply">Última Atualização</div>
+
+    <!-- Header e Estatísticas -->
+    <div class="atividades-header">
+        <div class="header-content">
+            <h1><i class="fa fa-feed"></i> Feed de Atividades</h1>
+            <div class="stats-quick">
+                <div class="stat-item">
+                    <span class="stat-number">{{ stats.total_atividades }}</span>
+                    <span class="stat-label">Total</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ stats.atividades_hoje }}</span>
+                    <span class="stat-label">Hoje</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ stats.novos_topicos_hoje }}</span>
+                    <span class="stat-label">Tópicos Hoje</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ stats.novas_respostas_hoje }}</span>
+                    <span class="stat-label">Respostas Hoje</span>
+                </div>
+            </div>
         </div>
-        
-        {% for atividade in atividades %}
-        <div class="table-row">
-            <div class="status">
-                {% if atividade.tipo == 'THREAD' %}
-                    <i class="fa fa-comment"></i>
-                {% else %}
-                    <i class="fa fa-reply"></i>
-                {% endif %}
-                
-                {% if atividade.fixado %}
-                    <i class="fa fa-thumbtack"></i>
-                {% endif %}
-                
-                {% if atividade.fechado %}
-                    <i class="fa fa-lock"></i>
-                {% endif %}
-            </div>
-            <div class="subjects">
-                {% if atividade.tipo == 'THREAD' %}
-                    <a href="{% url 'thread_detail' atividade.assunto.categoria.slug atividade.assunto.slug atividade.id %}">
-                        {{ atividade.titulo }}
-                    </a>
-                {% else %}
-                    <a href="{% url 'post_detail' atividade.assunto.categoria.slug atividade.assunto.slug atividade.id %}">
-                        {{ atividade.titulo }}
-                    </a>
-                {% endif %}
-                <br>
-                <span>
-                    {% if atividade.assunto %}
-                    Em <b><a href="">{{ atividade.assunto.nome }}</a></b> •
-                    {% endif %}
-                    Iniciado por <b><a href="">{{ atividade.autor.username }}</a></b>
-                </span>
-            </div>
-            <div class="replies">
-                {% if atividade.replies.count %}
-                    {{ atividade.replies.count }} respostas <br>
-                {% else %}
-                    0 respostas <br>
-                {% endif %}
-                {{ atividade.visualizacoes }} visualizações
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros-atividades">
+        <form method="get" class="filtros-form">
+            <div class="filtro-group">
+                <label for="tipo">Tipo de Atividade:</label>
+                <select name="tipo" id="tipo">
+                    {% for value, label in tipos_atividade %}
+                    <option value="{{ value }}" {% if filtros_ativos.tipo == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
             </div>
 
-            <div class="last-reply">
-                {{ atividade.criado_em|date:"d M Y" }}
-                <br>Por <b><a href="">{{ atividade.autor.username }}</a></b>
+            <div class="filtro-group">
+                <label for="periodo">Período:</label>
+                <select name="periodo" id="periodo">
+                    {% for value, label in periodos %}
+                    <option value="{{ value }}" {% if filtros_ativos.periodo == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filtro-group">
+                <label for="autor">Autor:</label>
+                <input type="text" name="autor" id="autor" value="{{ filtros_ativos.autor }}" 
+                       placeholder="Nome do usuário...">
+            </div>
+
+            <div class="filtro-actions">
+                <button type="submit" class="btn-filtrar">
+                    <i class="fa fa-filter"></i> Filtrar
+                </button>
+                <a href="?" class="btn-limpar">
+                    <i class="fa fa-times"></i> Limpar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Informações dos Filtros Ativos -->
+    {% if filtros_ativos.tipo != 'todas' or filtros_ativos.periodo != 'todas' or filtros_ativos.autor %}
+    <div class="filtros-ativos-info">
+        <span class="filtros-label">Filtros ativos:</span>
+        {% if filtros_ativos.tipo != 'todas' %}
+            <span class="filtro-ativo">Tipo: {{ filtros_ativos.tipo }}</span>
+        {% endif %}
+        {% if filtros_ativos.periodo != 'todas' %}
+            <span class="filtro-ativo">Período: {{ filtros_ativos.periodo }}</span>
+        {% endif %}
+        {% if filtros_ativos.autor %}
+            <span class="filtro-ativo">Autor: {{ filtros_ativos.autor }}</span>
+        {% endif %}
+        <a href="?" class="limpar-todos">Limpar todos</a>
+    </div>
+    {% endif %}
+
+    <!-- Feed de Atividades -->
+    <div class="atividades-feed">
+        {% for atividade in atividades %}
+        <div class="atividade-item" data-tipo="{{ atividade.tipo }}">
+            <div class="atividade-avatar">
+                {% if atividade.usuario.avatar %}
+                    <img src="{{ atividade.usuario.avatar.url }}" alt="{{ atividade.usuario.username }}">
+                {% else %}
+                    <div class="avatar-default">
+                        {{ atividade.usuario.username|first|upper }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="atividade-content">
+                <div class="atividade-header">
+                    <span class="atividade-icon">
+                        {% if atividade.tipo == 'NOVO_THREAD' %}
+                            <i class="fa fa-comment" title="Novo Tópico"></i>
+                        {% elif atividade.tipo == 'NOVA_REPLY' %}
+                            <i class="fa fa-reply" title="Nova Resposta"></i>
+                        {% elif atividade.tipo == 'NOVO_POST' %}
+                            <i class="fa fa-file-text" title="Novo Post"></i>
+                        {% elif atividade.tipo == 'NOVA_REACAO_POST' or atividade.tipo == 'NOVA_REACAO_REPLY' %}
+                            <i class="fa fa-heart" title="Nova Reação"></i>
+                        {% endif %}
+                    </span>
+
+                    <span class="atividade-narrative">
+                        <a href="{% url 'accounts:perfil' atividade.usuario.username %}" 
+                           class="user-link {{ atividade.usuario|get_user_role_class }}">
+                            {{ atividade.usuario.username }}
+                            <span class="user-role">{{ atividade.usuario|get_user_role_display }}</span>
+                        </a>
+                        {{ atividade.get_narrative_text }}
+                        
+                        {% if atividade.get_target_post %}
+                            <a href="{% url 'postagem_detail' atividade.get_target_post.assunto.categoria.slug atividade.get_target_post.assunto.slug atividade.get_target_post.id %}" 
+                               class="topic-link">"{{ atividade.get_target_post.titulo }}"</a>
+                        {% endif %}
+                        
+                        {% if atividade.get_target_post.assunto %}
+                            em <a href="{% url 'home:assunto_detail' atividade.get_target_post.assunto.categoria.slug atividade.get_target_post.assunto.slug %}" 
+                                  class="forum-link">{{ atividade.get_target_post.assunto.nome }}</a>
+                        {% endif %}
+                    </span>
+
+                    <span class="atividade-time" title="{{ atividade.criado_em }}">
+                        {{ atividade.criado_em|tempo_relativo }}
+                    </span>
+                </div>
+
+                {% if atividade.reacao %}
+                <div class="atividade-details">
+                    <div class="reacao-info">
+                        <img src="{{ atividade.reacao.icone.url }}" alt="{{ atividade.reacao.nome }}" class="reacao-icon">
+                        <span>{{ atividade.reacao.nome }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if atividade.get_target_post.tags_especificas.exists %}
+                <div class="atividade-tags">
+                    {% for tag in atividade.get_target_post.tags_especificas.all %}
+                    <span class="tag-especifica">{{ tag.nome }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="atividade-meta">
+                {% if atividade.get_target_post %}
+                <div class="post-stats">
+                    <span class="stat">
+                        <i class="fa fa-comments"></i>
+                        {{ atividade.get_target_post.replies.count }}
+                    </span>
+                    <span class="stat">
+                        <i class="fa fa-eye"></i>
+                        {{ atividade.get_target_post.visualizacoes }}
+                    </span>
+                    {% if atividade.get_target_post.reacoes.exists %}
+                    <span class="stat">
+                        <i class="fa fa-heart"></i>
+                        {{ atividade.get_target_post.reacoes.count }}
+                    </span>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
         {% empty %}
-        <div class="table-row">
-            <div class="subjects" style="width: 100%; text-align: center;">
-                Nenhuma atividade recente encontrada.
+        <div class="no-atividades">
+            <div class="no-atividades-icon">
+                <i class="fa fa-inbox"></i>
             </div>
+            <h3>Nenhuma atividade encontrada</h3>
+            <p>Não há atividades que correspondem aos filtros selecionados.</p>
+            <a href="?" class="btn-reset">Limpar filtros</a>
         </div>
         {% endfor %}
     </div>
-    
-    <!--Pagination starts-->
+
+    <!-- Paginação -->
     {% if atividades.has_other_pages %}
-    <div class="pagination">
-        páginas: 
-        {% for i in atividades.paginator.page_range %}
-            {% if atividades.number == i %}
-                <a class="active" href="?page={{ i }}">{{ i }}</a>
-            {% else %}
-                <a href="?page={{ i }}">{{ i }}</a>
+    <div class="pagination-container">
+        <div class="pagination">
+            {% if atividades.has_previous %}
+                <a href="?page=1{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.periodo %}&periodo={{ request.GET.periodo }}{% endif %}{% if request.GET.autor %}&autor={{ request.GET.autor }}{% endif %}" 
+                   class="page-link">Primeira</a>
+                <a href="?page={{ atividades.previous_page_number }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.periodo %}&periodo={{ request.GET.periodo }}{% endif %}{% if request.GET.autor %}&autor={{ request.GET.autor }}{% endif %}" 
+                   class="page-link">Anterior</a>
             {% endif %}
-        {% endfor %}
+
+            <span class="page-info">
+                Página {{ atividades.number }} de {{ atividades.paginator.num_pages }}
+            </span>
+
+            {% if atividades.has_next %}
+                <a href="?page={{ atividades.next_page_number }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.periodo %}&periodo={{ request.GET.periodo }}{% endif %}{% if request.GET.autor %}&autor={{ request.GET.autor }}{% endif %}" 
+                   class="page-link">Próxima</a>
+                <a href="?page={{ atividades.paginator.num_pages }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.periodo %}&periodo={{ request.GET.periodo }}{% endif %}{% if request.GET.autor %}&autor={{ request.GET.autor }}{% endif %}" 
+                   class="page-link">Última</a>
+            {% endif %}
+        </div>
     </div>
     {% endif %}
-    <!--pagination ends-->
 </div>
+
+<script>
+// Auto-submit dos filtros
+document.addEventListener('DOMContentLoaded', function() {
+    const selects = document.querySelectorAll('.filtros-form select');
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+
+    // Função para atualizar estatísticas
+    function updateStats() {
+        fetch('{% url "atividades_stats" %}')
+            .then(response => response.json())
+            .then(data => {
+                document.querySelectorAll('.stat-number')[0].textContent = data.total_atividades;
+                document.querySelectorAll('.stat-number')[1].textContent = data.atividades_hoje;
+                document.querySelectorAll('.stat-number')[2].textContent = data.novos_topicos_hoje;
+                document.querySelectorAll('.stat-number')[3].textContent = data.novas_respostas_hoje;
+            })
+            .catch(error => console.log('Erro ao atualizar estatísticas:', error));
+    }
+
+    // Auto-refresh das estatísticas a cada 30 segundos
+    setInterval(updateStats, 30000);
+
+    // Notificação visual de novas atividades
+    let lastActivityCount = parseInt('{{ stats.total_atividades }}');
+    function checkNewActivities() {
+        fetch('{% url "atividades_stats" %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.total_atividades > lastActivityCount) {
+                    // Mostrar notificação de nova atividade
+                    const notification = document.createElement('div');
+                    notification.className = 'new-activity-notification';
+                    notification.innerHTML = `
+                        <i class="fa fa-bell"></i>
+                        Nova atividade disponível! 
+                        <a href="javascript:location.reload()">Clique para atualizar</a>
+                    `;
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 5000);
+                    
+                    lastActivityCount = data.total_atividades;
+                }
+            });
+    }
+
+    // Verificar novas atividades a cada 60 segundos
+    setInterval(checkNewActivities, 60000);
+});
+</script>
+
+<style>
+.new-activity-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #48bb78;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+}
+
+.new-activity-notification a {
+    color: #ffd700;
+    text-decoration: underline;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+</style>
 {% endblock %}

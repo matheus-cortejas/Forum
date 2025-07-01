@@ -262,6 +262,12 @@
                     <span class="stat-value">{{ forum_stats.total_members|default:"0" }}</span>
                 </div>
                 <div class="stat-item">
+                    <span class="stat-label">Online Now:</span>
+                    <span class="stat-value">
+                        <a href="{% url 'online' %}" style="color: #e53935;">{{ forum_stats.online_members|length }} members, {{ forum_stats.online_guests }} guests</a>
+                    </span>
+                </div>
+                <div class="stat-item">
                     <span class="stat-label">Online Record:</span>
                     <span class="stat-value">{{ forum_stats.online_record|default:"0" }} users</span>
                 </div>

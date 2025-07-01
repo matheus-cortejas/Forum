@@ -20,85 +20,116 @@ from home.models import Assunto
 from core.context_processors import filtros_forum
 
 def ultimas_atividades(request):
-    """Lista todas as atividades recentes (threads, posts, etc) com filtros"""
-    filtros = filtros_forum(request)
-    tipo = request.GET.get('tipo', 'all')
-    prefixo = request.GET.get('prefixo', '')
-    tags_usuario = request.GET.get('tags', '')
-    iniciada_por = request.GET.get('autor', '')
-    tipo_organizacao = request.GET.get('ordem', 'recente')
+    """Feed de atividades recentes com narrativa"""
+    from core.models import UltimaAtividade
+    from django.utils import timezone
+    from datetime import datetime, timedelta
+    
+    # Parâmetros de filtro
+    tipo_filtro = request.GET.get('tipo', 'todas')
+    periodo = request.GET.get('periodo', 'todas')
+    autor_filtro = request.GET.get('autor', '')
     page = request.GET.get('page', 1)
-    data_inicio = request.GET.get('data_inicio', '')
-    data_fim = request.GET.get('data_fim', '')
-    ordem_crescente = request.GET.get('ordem_crescente', 'desc') == 'asc'
 
-    threads = Post.objects.filter(tipo='THREAD')
-    posts = Post.objects.filter(tipo='POST')
+    # Query base
+    atividades = UltimaAtividade.objects.select_related(
+        'usuario', 'postagem', 'reply', 'reacao',
+        'postagem__assunto', 'postagem__autor',
+        'reply__postagem', 'reply__postagem__assunto'
+    ).prefetch_related(
+        'postagem__tags_especificas',
+        'usuario__groups'
+    )
 
-    # Filtros
-    if tipo == 'thread':
-        queryset = threads
-    elif tipo == 'post':
-        queryset = posts
-    else:
-        queryset = Post.objects.all()
+    # Filtro por tipo de atividade
+    if tipo_filtro != 'todas':
+        if tipo_filtro == 'novos_topicos':
+            atividades = atividades.filter(tipo='NOVO_THREAD')
+        elif tipo_filtro == 'novas_respostas':
+            atividades = atividades.filter(tipo='NOVA_REPLY')
+        elif tipo_filtro == 'novas_reacoes':
+            atividades = atividades.filter(tipo__in=['NOVA_REACAO_POST', 'NOVA_REACAO_REPLY'])
+        elif tipo_filtro == 'novos_posts':
+            atividades = atividades.filter(tipo='NOVO_POST')
 
-    if prefixo:
-        queryset = queryset.filter(tag_sistema__slug=prefixo)
-    if tags_usuario:
-        tags_list = [tag.strip() for tag in tags_usuario.split(',') if tag.strip()]
-        for tag in tags_list:
-            queryset = queryset.filter(tags_especificas__nome__icontains=tag)
-    if iniciada_por:
-        queryset = queryset.filter(autor__username__icontains=iniciada_por)
-    if data_inicio:
-        try:
-            from datetime import datetime
-            data_inicio_dt = datetime.strptime(data_inicio, "%Y-%m-%d")
-            queryset = queryset.filter(criado_em__date__gte=data_inicio_dt)
-        except Exception:
-            pass
-    if data_fim:
-        try:
-            from datetime import datetime
-            data_fim_dt = datetime.strptime(data_fim, "%Y-%m-%d")
-            queryset = queryset.filter(criado_em__date__lte=data_fim_dt)
-        except Exception:
-            pass
+    # Filtro por período
+    if periodo != 'todas':
+        now = timezone.now()
+        if periodo == 'hoje':
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif periodo == 'esta_semana':
+            start_date = now - timedelta(days=now.weekday())
+            start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif periodo == 'este_mes':
+            start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        elif periodo == 'ultimos_7_dias':
+            start_date = now - timedelta(days=7)
+        elif periodo == 'ultimos_30_dias':
+            start_date = now - timedelta(days=30)
+        else:
+            start_date = None
+            
+        if start_date:
+            atividades = atividades.filter(criado_em__gte=start_date)
 
-    # Ordenação
-    if tipo_organizacao == 'antigo':
-        queryset = queryset.order_by('criado_em' if ordem_crescente else '-criado_em')
-    elif tipo_organizacao == 'visualizacoes':
-        queryset = queryset.order_by('visualizacoes' if ordem_crescente else '-visualizacoes')
-    elif tipo_organizacao == 'atividade':
-        queryset = queryset.annotate(ultima_atividade=F('atualizado_em')).order_by('ultima_atividade' if ordem_crescente else '-ultima_atividade', 'criado_em' if ordem_crescente else '-criado_em')
-    else:
-        queryset = queryset.order_by('criado_em' if ordem_crescente else '-criado_em')
+    # Filtro por autor
+    if autor_filtro:
+        atividades = atividades.filter(usuario__username__icontains=autor_filtro)
 
-    queryset = queryset.select_related('autor', 'assunto', 'tag_sistema').prefetch_related('tags_especificas')
-    paginator = Paginator(queryset, 20)
+    # Ordenação e paginação
+    atividades = atividades.order_by('-criado_em')
+    
+    # Estatísticas rápidas
+    stats = {
+        'total_atividades': atividades.count(),
+        'atividades_hoje': UltimaAtividade.objects.filter(
+            criado_em__date=timezone.now().date()
+        ).count(),
+        'novos_topicos_hoje': UltimaAtividade.objects.filter(
+            tipo='NOVO_THREAD',
+            criado_em__date=timezone.now().date()
+        ).count(),
+        'novas_respostas_hoje': UltimaAtividade.objects.filter(
+            tipo='NOVA_REPLY',
+            criado_em__date=timezone.now().date()
+        ).count(),
+    }
+
+    # Paginação
+    paginator = Paginator(atividades, 25)
     try:
-        atividades = paginator.page(page)
+        atividades_page = paginator.page(page)
     except:
-        atividades = paginator.page(1)
+        atividades_page = paginator.page(1)
+
+    # Opções para filtros
+    tipos_atividade = [
+        ('todas', 'Todas as Atividades'),
+        ('novos_topicos', 'Novos Tópicos'),
+        ('novas_respostas', 'Novas Respostas'),
+        ('novos_posts', 'Novos Posts'),
+        ('novas_reacoes', 'Novas Reações'),
+    ]
+
+    periodos = [
+        ('todas', 'Todos os Períodos'),
+        ('hoje', 'Hoje'),
+        ('esta_semana', 'Esta Semana'),
+        ('este_mes', 'Este Mês'),
+        ('ultimos_7_dias', 'Últimos 7 Dias'),
+        ('ultimos_30_dias', 'Últimos 30 Dias'),
+    ]
 
     return render(request, 'posts/ultimas_atividades.html', {
-        'atividades': atividades,
+        'atividades': atividades_page,
+        'stats': stats,
         'filtros_ativos': {
-            'tipo': tipo,
-            'prefixo': prefixo,
-            'tags': tags_usuario,
-            'autor': iniciada_por,
-            'ordem': tipo_organizacao,
+            'tipo': tipo_filtro,
+            'periodo': periodo,
+            'autor': autor_filtro,
         },
-        'tipos_filtro': filtros['tipos_filtro'],
-        'tags_sistema_filtro': filtros['tags_sistema_filtro'],
-        'tags_populares': filtros['tags_populares'],
-        'tipos_organizacao': filtros['tipos_organizacao'],
-        'data_inicio': data_inicio,
-        'data_fim': data_fim,
-        'ordem_crescente': ordem_crescente,
+        'tipos_atividade': tipos_atividade,
+        'periodos': periodos,
     })
 
 def recent_threads(request):
@@ -613,3 +644,26 @@ def add_reaction_reply(request, reply_id):
         print(f"Erro em add_reaction_reply: {str(e)}")
         print(traceback.format_exc())
         return JsonResponse({'success': False, 'error': str(e)})
+
+def ultimas_atividades_stats(request):
+    """API endpoint para estatísticas das atividades (para auto-refresh)"""
+    from django.http import JsonResponse
+    from core.models import UltimaAtividade
+    from django.utils import timezone
+    
+    stats = {
+        'total_atividades': UltimaAtividade.objects.count(),
+        'atividades_hoje': UltimaAtividade.objects.filter(
+            criado_em__date=timezone.now().date()
+        ).count(),
+        'novos_topicos_hoje': UltimaAtividade.objects.filter(
+            tipo='NOVO_THREAD',
+            criado_em__date=timezone.now().date()
+        ).count(),
+        'novas_respostas_hoje': UltimaAtividade.objects.filter(
+            tipo='NOVA_REPLY',
+            criado_em__date=timezone.now().date()
+        ).count(),
+    }
+    
+    return JsonResponse(stats)

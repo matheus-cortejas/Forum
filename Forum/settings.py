@@ -53,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'accounts.middleware.OnlineUsersMiddleware',  # Middleware para rastrear usuários online
 ]
 
 ROOT_URLCONF = 'Forum.urls'
@@ -63,12 +64,14 @@ TEMPLATES = [
         'DIRS': ['templates'],
         'APP_DIRS': True,
         'OPTIONS': {            'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.atividades_recentes',
                 'core.context_processors.forum_stats',
                 'core.context_processors.filtros_forum',
+                'core.context_processors.online_stats',
             ],
         },
     },
