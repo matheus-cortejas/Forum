@@ -65,3 +65,41 @@
 .online-stats div {
     margin-bottom: 6px;
 }
+
+.d-flex {
+    display: flex;
+}
+
+.gap-32 {
+    gap: 32px;
+}
+
+.flex-2 {
+    flex: 2;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.minw-220 {
+    min-width: 220px;
+}
+
+.online-total-divider {
+    border-top: 1px solid #35363b;
+    padding-top: 8px;
+    margin-top: 8px;
+}
+
+.online-stats-note {
+    font-size: 0.95em;
+    margin-top: 12px;
+    line-height: 1.4;
+    color: #888;
+}
+
+.staff-label {
+    color: #ffa726;
+    font-size: 12px;
+}

@@ -78,7 +78,7 @@
                                 {% if user_reaction_postagem %}data-user-reaction="{{ user_reaction_postagem.reacao.id }}"{% endif %}>
                             <i class="fa fa-smile-o"></i>
                             {% with total_reactions=reacoes_postagem|length %}
-                            <span class="reaction-count" style="{% if not total_reactions %}display: none;{% endif %}">
+                            <span class="reaction-count{% if not total_reactions %} d-none{% endif %}">
                                 {{ total_reactions }}
                             </span>
                             {% endwith %}

@@ -10,12 +10,13 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib.auth.forms import AuthenticationForm
 
 from .models import Usuario, VisitaPerfil
+from .forms import EditarPerfilForm
 
 class PerfilDetailView(DetailView):
     """View para exibir perfil de um usuário"""
     model = Usuario
-    template_name = 'accounts/profile.html'  # CORRIGIDO: usar profile.html
-    context_object_name = 'usuario'  # CORRIGIDO: usar 'usuario' em vez de 'usuario_perfil'
+    template_name = 'accounts/profile.html'
+    context_object_name = 'usuario'
     slug_field = 'username'
     slug_url_kwarg = 'username'
     
@@ -27,59 +28,40 @@ class PerfilDetailView(DetailView):
         if self.request.user.is_authenticated and self.request.user != usuario_perfil:
             VisitaPerfil.registrar_visita(usuario_perfil, self.request.user)
         
-        # Buscar atividades recentes
+        # Buscar atividades recentes do usuário
         try:
-            from posts.models import Post, Reply
-            # Últimas postagens do usuário
-            ultimas_postagens = Post.objects.filter(autor=usuario_perfil).order_by('-criado_em')[:5]
-            # Últimas respostas do usuário
-            ultimas_respostas = Reply.objects.filter(autor=usuario_perfil).order_by('-criado_em')[:5]
+            from posts.models import Postagem, Reply
+            from core.models import UltimaAtividade
             
-            # Combinar e ordenar atividades por data
-            atividades = []
-            
-            for post in ultimas_postagens:
-                atividades.append({
-                    'tipo': 'post',
-                    'titulo': post.titulo,
-                    'conteudo': post.conteudo[:150] + '...' if len(post.conteudo) > 150 else post.conteudo,
-                    'data': post.criado_em,
-                    'url': f'/posts/{post.assunto.categoria.slug}/{post.assunto.slug}/{post.id}/'
-                })
-                
-            for reply in ultimas_respostas:
-                if hasattr(reply, 'postagem'):
-                    atividades.append({
-                        'tipo': 'reply',
-                        'titulo': f'Comentou em: {reply.postagem.titulo}',
-                        'conteudo': reply.conteudo[:150] + '...' if len(reply.conteudo) > 150 else reply.conteudo,
-                        'data': reply.criado_em,
-                        'url': f'/posts/{reply.postagem.assunto.categoria.slug}/{reply.postagem.assunto.slug}/{reply.postagem.id}/'
-                    })
-            
-            # Ordenar por data (mais recentes primeiro)
-            atividades = sorted(atividades, key=lambda x: x['data'], reverse=True)[:10]
+            # Atividades do usuário específico
+            atividades_usuario = UltimaAtividade.objects.filter(
+                usuario=usuario_perfil
+            ).select_related(
+                'postagem', 'reply', 'reacao',
+                'postagem__assunto', 'postagem__assunto__categoria',
+                'reply__postagem', 'reply__postagem__assunto'
+            ).order_by('-criado_em')[:10]
             
         except ImportError:
-            ultimas_postagens = []
-            ultimas_respostas = []
-            atividades = []
+            atividades_usuario = []
+        
+        # Seguidores com avatar
+        seguidores_com_avatar = usuario_perfil.seguidores.all()[:12]  # Máximo 12 para exibição
         
         # Adicionar contexto adicional
         context.update({
             'ultimos_visitantes': usuario_perfil.visitas_recebidas.all()[:5] if hasattr(usuario_perfil, 'visitas_recebidas') else [],
-            'total_seguidores': usuario_perfil.get_total_seguidores() if hasattr(usuario_perfil, 'get_total_seguidores') else 0,
+            'total_seguidores': usuario_perfil.get_total_seguidores(),
             'seguindo': self.request.user.is_authenticated and self.request.user.esta_seguindo(usuario_perfil) if hasattr(self.request.user, 'esta_seguindo') else False,
-            'ultimas_postagens': ultimas_postagens,
-            'ultimas_respostas': ultimas_respostas,
-            'atividades': atividades,
+            'atividades_usuario': atividades_usuario,
+            'seguidores_com_avatar': seguidores_com_avatar,
             'data_cadastro': usuario_perfil.date_joined,
             'ultimo_acesso': usuario_perfil.ultimo_acesso if hasattr(usuario_perfil, 'ultimo_acesso') else usuario_perfil.last_login,
             'is_own_profile': self.request.user == usuario_perfil,
         })
         
         return context
-    
+
 @login_required
 def seguir_usuario(request, username):
     """View para seguir/deixar de seguir um usuário"""
@@ -111,15 +93,18 @@ def seguir_usuario(request, username):
 class EditarPerfilView(LoginRequiredMixin, UpdateView):
     """View para editar o próprio perfil"""
     model = Usuario
+    form_class = EditarPerfilForm
     template_name = 'accounts/editar_perfil.html'
-    fields = ['apelido', 'avatar', 'biografia', 'data_nascimento', 
-              'localizacao', 'site', 'altura', 'peso', 'objetivo']
     
     def get_object(self, queryset=None):
         return self.request.user
     
     def get_success_url(self):
         return reverse_lazy('perfil', kwargs={'username': self.request.user.username})
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Perfil atualizado com sucesso!')
+        return super().form_valid(form)
 
 def login(request):
     """View para login de usuário"""
@@ -657,6 +642,21 @@ def profile(request):
         ultimas_respostas = []
         atividades = []
     
+    # Buscar últimos visitantes
+    ultimos_visitantes = usuario.visitas_recebidas.all()[:5] if hasattr(usuario, 'visitas_recebidas') else []
+    
+    context = {
+        'usuario': usuario,
+        'ultimas_postagens': ultimas_postagens,
+        'ultimas_respostas': ultimas_respostas,
+        'atividades': atividades,
+        'ultimos_visitantes': ultimos_visitantes,
+        'total_seguidores': usuario.get_total_seguidores() if hasattr(usuario, 'get_total_seguidores') else 0,
+        'data_cadastro': usuario.date_joined,
+        'ultimo_acesso': usuario.ultimo_acesso if hasattr(usuario, 'ultimo_acesso') else usuario.last_login,
+    }
+    
+    return render(request, 'accounts/profile.html', context)
     # Buscar últimos visitantes
     ultimos_visitantes = usuario.visitas_recebidas.all()[:5] if hasattr(usuario, 'visitas_recebidas') else []
     

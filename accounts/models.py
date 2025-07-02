@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.conf import settings
 from django.urls import reverse
 from django.utils.text import slugify
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from datetime import timedelta
 
@@ -57,6 +57,7 @@ class UserManager(BaseUserManager):
 class Usuario(AbstractUser):
     """Extensão do modelo de usuário padrão do Django com campos específicos para fórum"""
     # Informações básicas
+    nome_real = models.CharField(max_length=100, blank=True, help_text="Nome real (editável)")
     apelido = models.CharField(max_length=30, blank=True, help_text="Nome de exibição opcional")
     avatar = models.ImageField(upload_to='avatares/', null=True, blank=True)
     cargos = models.ManyToManyField(CargoMembro, blank=True, related_name='usuarios')
@@ -64,14 +65,14 @@ class Usuario(AbstractUser):
     # Dados de perfil
     data_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
     localizacao = models.CharField(max_length=100, blank=True, verbose_name="Localização")
-    biografia = models.TextField(blank=True, verbose_name="Sobre mim")
+    biografia = models.TextField(blank=True, verbose_name="Sobre mim", max_length=500)
     site = models.URLField(blank=True)
     
     # Estatísticas
+    posts_count = models.PositiveIntegerField(default=0, help_text="Número de posts e threads")
     total_itens = models.PositiveIntegerField(default=0, help_text="Total de mensagens, tópicos e conteúdos")
     reputacao = models.IntegerField(default=0, help_text="Pontuação de reações recebidas")
-    answers = models.PositiveIntegerField(default=0, help_text="Número de respostas marcadas como solução")
-    # Removido: dias_ganhos
+    answers = models.PositiveIntegerField(default=0, help_text="Número de respostas")
     
     # Timestamps
     cadastrado_em = models.DateTimeField(auto_now_add=True)
@@ -91,6 +92,31 @@ class Usuario(AbstractUser):
             self.apelido = self.username
         super().save(*args, **kwargs)
     
+    def get_display_name(self):
+        """Retorna o nome de exibição (nome real ou apelido ou username)"""
+        return self.nome_real or self.apelido or self.username
+    
+    def get_short_name(self):
+        """Retorna nome curto para exibição"""
+        return self.nome_real or self.username
+    
+    def update_posts_count(self):
+        """Atualiza contagem de posts/threads"""
+        from posts.models import Postagem
+        self.posts_count = Postagem.objects.filter(autor=self).count()
+        self.save(update_fields=['posts_count'])
+    
+    def update_answers_count(self):
+        """Atualiza contagem de respostas"""
+        from posts.models import Reply
+        self.answers = Reply.objects.filter(autor=self).count()
+        self.save(update_fields=['answers'])
+    
+    def update_total_count(self):
+        """Atualiza contagem total de itens"""
+        self.total_itens = self.posts_count + self.answers
+        self.save(update_fields=['total_itens'])
+
     def atualizar_ultimo_acesso(self):
         self.ultimo_acesso = timezone.now()
         self.save(update_fields=['ultimo_acesso'])
@@ -121,10 +147,6 @@ class Usuario(AbstractUser):
         if self.avatar and hasattr(self.avatar, 'url'):
             return self.avatar.url
         return '/static/images/default-avatar.png'
-    
-    def get_display_name(self):
-        """Retorna o nome de exibição (apelido ou username)"""
-        return self.apelido or self.username
     
     def __str__(self):
         return self.username
@@ -164,7 +186,7 @@ class VisitaPerfil(models.Model):
 
 class UsuarioOnline(models.Model):
     """Rastreia usuários ativos no sistema"""
-    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, null=True, blank=True)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, null=True, blank=True, related_name='sessoes_online')
     session_key = models.CharField(max_length=40, unique=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
@@ -180,6 +202,11 @@ class UsuarioOnline(models.Model):
         verbose_name = "Usuário Online"
         verbose_name_plural = "Usuários Online"
         ordering = ['-ultima_atividade']
+        indexes = [
+            models.Index(fields=['usuario']),
+            models.Index(fields=['ultima_atividade']),
+            models.Index(fields=['is_authenticated']),
+        ]
     
     @staticmethod
     def get_online_count():
@@ -229,19 +256,3 @@ class UsuarioOnline(models.Model):
             return f"Membro: {self.usuario.username}"
         else:
             return "Visitante"
-
-# Atualizar estatísticas quando um post é criado
-@receiver(post_save, sender='posts.Postagem')
-def atualizar_estatisticas_usuario(sender, instance, created, **kwargs):
-    if created:
-        usuario = instance.autor
-        usuario.total_itens += 1
-        usuario.save(update_fields=['total_itens'])
-        
-# Atualizar estatísticas quando uma resposta é criada
-@receiver(post_save, sender='posts.Reply')
-def atualizar_estatisticas_resposta(sender, instance, created, **kwargs):
-    if created:
-        usuario = instance.autor
-        usuario.total_itens += 1
-        usuario.save(update_fields=['total_itens'])

@@ -23,16 +23,17 @@
                         resultado
                     {% else %}
                         resultados
-                    {% endif %} <!-- DEBUG: if total_resultados == 1 -->
+                    {% endif %}
                     {% if filtros_ativos.tipo != 'all' or filtros_ativos.prefixo or filtros_ativos.tags or filtros_ativos.autor or filtros_ativos.ordem != 'recente' %}
                         com filtros aplicados
                         <a href="{% url 'assunto_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug %}" class="filter-clear-all">
                             (limpar filtros)
                         </a>
-                    {% endif %} <!-- DEBUG: if filtros_ativos... -->
+                    {% endif %}
                 </p>
             </div>
-            {% endif %} <!-- DEBUG: if total_resultados -->
+            {% endif %}
+
             <!-- Tópicos Fixos -->
             {% if threads_fixas %}
             <div class="subforum">
@@ -47,12 +48,10 @@
                     <div class="subforum-description subforum-column">
                         <h4>
                             {% if thread.tag_sistema %}
-                            <span class="thread-tag"
-                                style="background-color: {{ thread.tag_sistema.cor }}; color: #fff;">
+                            <span class="thread-tag tag-sistema" style="--tag-bg: {{ thread.tag_sistema.cor }};">
                                 [{{ thread.tag_sistema.nome }}]</span>
-                            {% endif %} <!-- DEBUG: if thread.tag_sistema -->
-                            <a
-                                href="{% url 'thread_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug thread_id=thread.id %}">
+                            {% endif %}
+                            <a href="{% url 'thread_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug thread_id=thread.id %}">
                                 {{ thread.titulo }}
                             </a>
                         </h4>
@@ -70,10 +69,10 @@
                     </div>
                 </div>
                 {% if not forloop.last %}
-                <hr class="subforum-devider">{% endif %} <!-- DEBUG: if not forloop.last -->
-                {% endfor %} <!-- DEBUG: for thread in threads_fixas -->
+                <hr class="subforum-devider">{% endif %}
+                {% endfor %}
             </div>
-            {% endif %} <!-- DEBUG: if threads_fixas -->
+            {% endif %}
 
             <!-- Resultados dos Filtros -->
             <div class="subforum">
@@ -85,7 +84,7 @@
                         Posts
                         {% else %}
                         Threads e Posts
-                        {% endif %} <!-- DEBUG: if filtros_ativos.tipo -->
+                        {% endif %}
                     </h2>
                 </div>
 
@@ -97,21 +96,21 @@
                         <i class="fa fa-comment"></i>
                         {% else %}
                         <i class="fa fa-reply"></i>
-                        {% endif %} <!-- DEBUG: if item.tipo == 'THREAD' -->
+                        {% endif %}
                     </div>
                     <div class="subforum-description subforum-column">
                         <h4>
                             {% if item.tag_sistema %}
-                            <span class="thread-tag" style="background-color: {{ item.tag_sistema.cor }}; color: #fff;">
+                            <span class="thread-tag tag-sistema" style="--tag-bg: {{ item.tag_sistema.cor }};">
                                 [{{ item.tag_sistema.nome }}]</span>
-                            {% endif %} <!-- DEBUG: if item.tag_sistema -->
+                            {% endif %}
 
                             {% if item.tags_especificas.exists %}
                             {% for tag in item.tags_especificas.all %}
-                            <span class="thread-tag" style="background-color: #6c757d; color: #fff;">
+                            <span class="thread-tag tag-especifica">
                                 #{{ tag.nome }}</span>
-                            {% endfor %} <!-- DEBUG: for tag in item.tags_especificas.all -->
-                            {% endif %} <!-- DEBUG: if item.tags_especificas.exists -->
+                            {% endfor %}
+                            {% endif %}
 
                             <a href="{% if item.tipo == 'THREAD' %}
                                         {% url 'thread_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug thread_id=item.id %}
@@ -123,17 +122,15 @@
 
                             {% if item.tipo == 'THREAD' and item.fechado %}
                             <i class="fa fa-lock" title="Tópico fechado"></i>
-                            {% endif %} <!-- DEBUG: if item.tipo == 'THREAD' and item.fechado -->
+                            {% endif %}
                         </h4>
-
- 
                         <div class="thread-meta">
                             <span class="author">{{ item.autor.username }}</span>
                             <span class="date">{{ item.criado_em|date:"d/m/Y H:i" }}</span>
                             <span class="tipo">{{ item.get_tipo_display }}</span>
                         </div>
                     </div>
-                    <div class="subforum-stats subforum-column center">                       
+                    <div class="subforum-stats subforum-column center">
                         <span>Respostas: {{ item.replies.count }} | Views: {{ item.visualizacoes }}</span>
                     </div>
                     <div class="subforum-info subforum-column">
@@ -142,8 +139,8 @@
                     </div>
                 </div>
                 {% if not forloop.last %}
-                <hr class="subforum-devider">{% endif %} <!-- DEBUG: if not forloop.last -->
-                {% endfor %} <!-- DEBUG: for item in postagens -->
+                <hr class="subforum-devider">{% endif %}
+                {% endfor %}
 
                 <!-- Paginação com Filtros -->
                 {% if postagens.has_other_pages %}
@@ -154,38 +151,30 @@
                     </div>
                     <div class="pagination">
                         {% if postagens.has_previous %}
-                        <a
-                            href="?page={{ postagens.previous_page_number }}{% if filtros_query_string %}&{{ filtros_query_string }}{% endif %}">&laquo;
-                            Anterior</a>
-                        {% endif %} <!-- DEBUG: if postagens.has_previous -->
-
+                        <a href="?page={{ postagens.previous_page_number }}{% if filtros_query_string %}&{{ filtros_query_string }}{% endif %}">&laquo; Anterior</a>
+                        {% endif %}
                         {% for num in postagens.paginator.page_range %}
                         {% if postagens.number == num %}
                         <span class="current">{{ num }}</span>
-                        {% elif num > postagens.number|add:'-3' and num < postagens.number|add:'3' %} <a
-                            href="?page={{ num }}{% if filtros_query_string %}&{{ filtros_query_string }}{% endif %}">{{
-                            num }}</a>
-                            {% endif %} <!-- DEBUG: if postagens.number == num / elif ... -->
-                            {% endfor %} <!-- DEBUG: for num in postagens.paginator.page_range -->
-
-                            {% if postagens.has_next %}
-                            <a
-                                href="?page={{ postagens.next_page_number }}{% if filtros_query_string %}&{{ filtros_query_string }}{% endif %}">Próximo
-                                &raquo;</a>
-                            {% endif %} <!-- DEBUG: if postagens.has_next -->
+                        {% elif num > postagens.number|add:'-3' and num < postagens.number|add:'3' %}
+                        <a href="?page={{ num }}{% if filtros_query_string %}&{{ filtros_query_string }}{% endif %}">{{ num }}</a>
+                        {% endif %}
+                        {% endfor %}
+                        {% if postagens.has_next %}
+                        <a href="?page={{ postagens.next_page_number }}{% if filtros_query_string %}&{{ filtros_query_string }}{% endif %}">Próximo &raquo;</a>
+                        {% endif %}
                     </div>
                 </div>
-                {% endif %} <!-- DEBUG: if postagens.has_other_pages -->
+                {% endif %}
                 {% else %}
                 <div class="filter-no-results">
                     <i class="fa fa-search"></i>
                     <p>Nenhum resultado encontrado com os filtros aplicados.</p>
-                    <a href="{% url 'assunto_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug %}"
-                        class="filter-clear-all">
+                    <a href="{% url 'assunto_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug %}" class="filter-clear-all">
                         Limpar filtros e ver todos os resultados
                     </a>
                 </div>
-                {% endif %} <!-- DEBUG: if postagens -->
+                {% endif %}
             </div>
         </div>
     </div>
@@ -195,7 +184,7 @@
         <div class="sidebar-section">
             <div class="section-header">
                 <h3>
-                    <a href="{% url 'threads' %}?ordem=visualizacoes" style="text-decoration:none; color:inherit;">Trending content</a>
+                    <a href="{% url 'threads' %}?ordem=visualizacoes" class="link-no-decoration link-inherit-color">Trending content</a>
                 </h3>
             </div>
             <div class="section-content">
@@ -224,7 +213,7 @@
         <div class="sidebar-section">
             <div class="section-header">
                 <h3>
-                    <a href="{% url 'posts' %}" style="text-decoration:none; color:inherit;">Recent posts</a>
+                    <a href="{% url 'posts' %}" class="link-no-decoration link-inherit-color">Recent posts</a>
                 </h3>
             </div>
             <div class="section-content">
@@ -246,7 +235,9 @@
         <!-- Forum Statistics -->
         <div class="sidebar-section">
             <div class="section-header">
-                <h3><a href="#" style="text-decoration:none; color:inherit;">Forum Statistics</a></h3>
+                <h3>
+                    <a href="#" class="link-no-decoration link-inherit-color">Forum Statistics</a>
+                </h3>
             </div>
             <div class="section-content stats">
                 <div class="stat-item">
@@ -264,7 +255,7 @@
                 <div class="stat-item">
                     <span class="stat-label">Online Now:</span>
                     <span class="stat-value">
-                        <a href="{% url 'online' %}" style="color: #e53935;">{{ forum_stats.online_members|length }} members, {{ forum_stats.online_guests }} guests</a>
+                        <a href="{% url 'online' %}" class="text-primary">{{ forum_stats.online_members|length }} members, {{ forum_stats.online_guests }} guests</a>
                     </span>
                 </div>
                 <div class="stat-item">

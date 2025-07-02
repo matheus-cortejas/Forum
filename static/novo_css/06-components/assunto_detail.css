@@ -1,0 +1,31 @@
+.thread-tag.tag-sistema {
+    background-color: var(--tag-bg, #6c757d);
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.95em;
+    margin-right: 4px;
+    display: inline-block;
+}
+
+.thread-tag.tag-especifica {
+    background-color: #6c757d;
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.95em;
+    margin-right: 4px;
+    display: inline-block;
+}
+
+.link-no-decoration {
+    text-decoration: none !important;
+}
+
+.link-inherit-color {
+    color: inherit !important;
+}
+
+.text-primary {
+    color: var(--color-primary, #e53935) !important;
+}

@@ -1,0 +1,131 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="forum-wrapper">
+    <div class="container">
+        <div class="edit-profile-header">
+            <h1><i class="fa fa-edit"></i> Editar Perfil</h1>
+            <a href="{% url 'perfil' user.username %}" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i> Voltar ao Perfil
+            </a>
+        </div>
+
+        <div class="edit-profile-content">
+            <form method="post" enctype="multipart/form-data" class="edit-profile-form">
+                {% csrf_token %}
+                
+                <div class="form-section">
+                    <h3>Informações Básicas</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form.nome_real.label_tag }}
+                            {{ form.nome_real }}
+                            <small class="form-text">Este nome será exibido no seu perfil</small>
+                            {% if form.nome_real.errors %}
+                                <div class="error-messages">
+                                    {% for error in form.nome_real.errors %}
+                                        <span class="error">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Foto de Perfil</h3>
+                    <div class="avatar-section">
+                        <div class="current-avatar">
+                            {% if user.avatar %}
+                                <img src="{{ user.avatar.url }}" alt="Avatar atual" class="avatar-preview">
+                            {% else %}
+                                <img src="{% static 'images/default-avatar.png' %}" alt="Avatar padrão" class="avatar-preview">
+                            {% endif %}
+                        </div>
+                        <div class="avatar-upload">
+                            {{ form.avatar.label_tag }}
+                            {{ form.avatar }}
+                            {% if form.avatar.errors %}
+                                <div class="error-messages">
+                                    {% for error in form.avatar.errors %}
+                                        <span class="error">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Sobre Você</h3>
+                    <div class="form-group">
+                        {{ form.biografia.label_tag }}
+                        {{ form.biografia }}
+                        <small class="form-text">Máximo 500 caracteres</small>
+                        {% if form.biografia.errors %}
+                            <div class="error-messages">
+                                {% for error in form.biografia.errors %}
+                                    <span class="error">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Informações Pessoais</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form.data_nascimento.label_tag }}
+                            {{ form.data_nascimento }}
+                            {% if form.data_nascimento.errors %}
+                                <div class="error-messages">
+                                    {% for error in form.data_nascimento.errors %}
+                                        <span class="error">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            {{ form.localizacao.label_tag }}
+                            {{ form.localizacao }}
+                            {% if form.localizacao.errors %}
+                                <div class="error-messages">
+                                    {% for error in form.localizacao.errors %}
+                                        <span class="error">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Contato</h3>
+                    <div class="form-group">
+                        {{ form.site.label_tag }}
+                        {{ form.site }}
+                        {% if form.site.errors %}
+                            <div class="error-messages">
+                                {% for error in form.site.errors %}
+                                    <span class="error">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-save"></i> Salvar Alterações
+                    </button>
+                    <a href="{% url 'perfil' user.username %}" class="btn btn-secondary">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

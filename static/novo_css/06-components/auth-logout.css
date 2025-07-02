@@ -1,0 +1,47 @@
+/* Auth Logout Component */
+
+.container.auth-logout-container {
+    max-width: 400px;
+    margin: 60px auto;
+}
+
+.auth-form.logout {
+    background: var(--color-dark-2, #232428);
+    border-radius: 8px;
+    padding: 32px;
+    text-align: center;
+}
+
+.auth-form.logout h2 {
+    color: var(--color-text, #fff);
+    margin-bottom: 24px;
+}
+
+.auth-form.logout p {
+    color: #bbb;
+    margin-bottom: 32px;
+}
+
+.auth-form.logout .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    text-decoration: none;
+    display: inline-block;
+    margin-right: 12px;
+}
+
+.auth-form.logout .btn:last-child {
+    margin-right: 0;
+}
+
+.auth-form.logout .btn-primary {
+    background: var(--color-primary, #e53935);
+    color: #fff;
+}
+
+.auth-form.logout .btn-secondary {
+    background: #666;
+    color: #fff;
+}

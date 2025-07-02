@@ -30,6 +30,14 @@
 @import url("06-components/members.css");
 @import url("06-components/reactions.css");
 @import url("06-components/online.css");
+@import url("06-components/atividades.css");
+@import url("06-components/atividades_widget.css");
+@import url("06-components/online-users-widget.css");
+@import url("06-components/edit-profile.css");
+@import url("06-components/auth-form.css");
+@import url("06-components/auth-logout.css");
+@import url("06-components/profile.css");
+@import url("06-components/assunto_detail.css");
 
 /* Utilities - Helper classes */
 @import url("07-utilities/helpers.css");

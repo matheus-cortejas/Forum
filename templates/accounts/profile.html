@@ -14,10 +14,19 @@
                 {% endif %}
             </div>
             <div class="profile-user-info">
-                <h2 class="profile-username">{{ usuario.username }}</h2>
+                <h2 class="profile-username">{{ usuario.get_display_name }}</h2>
+                {% if usuario.nome_real and usuario.nome_real != usuario.username %}
+                    <div class="profile-real-name">@{{ usuario.username }}</div>
+                {% endif %}
                 <div class="profile-role">
-                    <span class="user-link" style="color:#1976d2;">
-                        {{ usuario.apelido|default:"Membro" }}
+                    <span class="user-link">
+                        {% if usuario.cargos.exists %}
+                            {{ usuario.cargos.first.nome }}
+                        {% elif usuario.is_staff %}
+                            Staff
+                        {% else %}
+                            Membro
+                        {% endif %}
                     </span>
                 </div>
                 <div class="profile-meta">
@@ -34,12 +43,18 @@
             {% if user.is_authenticated %}
             <div class="profile-actions">
                 {% if is_own_profile %}
-                    <a href="{% url 'editar_perfil' %}" class="btn btn-primary">Editar Perfil</a>
+                    <a href="{% url 'editar_perfil' %}" class="btn btn-primary">
+                        <i class="fa fa-edit"></i> Editar Perfil
+                    </a>
                 {% else %}
-                    <form method="post" action="{% url 'seguir_usuario' usuario.username %}" style="display: inline;">
+                    <form method="post" action="{% url 'seguir_usuario' usuario.username %}" class="follow-form">
                         {% csrf_token %}
-                        <button type="submit" class="btn {% if seguindo %}btn-secondary{% else %}btn-primary{% endif %}">
-                            {% if seguindo %}Deixar de Seguir{% else %}Seguir{% endif %}
+                        <button type="submit" class="btn {% if seguindo %}btn-secondary{% else %}btn-primary{% endif %}" id="follow-btn">
+                            {% if seguindo %}
+                                <i class="fa fa-user-minus"></i> Deixar de Seguir
+                            {% else %}
+                                <i class="fa fa-user-plus"></i> Seguir
+                            {% endif %}
                         </button>
                     </form>
                 {% endif %}
@@ -48,38 +63,35 @@
         </div>
     </div>
 
-    <div class="container" style="display:flex; gap:32px; margin-top:32px;">
+    <div class="container profile-layout">
         <!-- Sidebar -->
-        <aside class="forum-sidebar" style="flex:1; min-width:260px;">
+        <aside class="forum-sidebar profile-sidebar">
             <div class="sidebar-section">
                 <div class="section-header">
                     <h3>Sobre</h3>
                 </div>
                 <div class="section-content">
                     {% if usuario.biografia %}
-                        <div style="margin-bottom: 16px;">
+                        <div class="user-bio">
                             <p>{{ usuario.biografia|linebreaks }}</p>
+                        </div>
+                    {% elif is_own_profile %}
+                        <div class="user-bio-empty">
+                            <p class="text-muted">Adicione uma biografia em <a href="{% url 'editar_perfil' %}">Editar Perfil</a></p>
                         </div>
                     {% endif %}
                     
-                    {% if usuario.data_nascimento %}
-                        <div><b>Data de Nascimento:</b> {{ usuario.data_nascimento|date:"d/m/Y" }}</div>
-                    {% endif %}
-                    {% if usuario.localizacao %}
-                        <div><b>Localização:</b> {{ usuario.localizacao }}</div>
-                    {% endif %}
-                    {% if usuario.objetivo %}
-                        <div><b>Objetivo:</b> {{ usuario.objetivo }}</div>
-                    {% endif %}
-                    {% if usuario.peso %}
-                        <div><b>Peso:</b> {{ usuario.peso }}kg</div>
-                    {% endif %}
-                    {% if usuario.altura %}
-                        <div><b>Altura:</b> {{ usuario.altura }}cm</div>
-                    {% endif %}
-                    {% if usuario.site %}
-                        <div><b>Website:</b> <a href="{{ usuario.site }}" target="_blank">{{ usuario.site }}</a></div>
-                    {% endif %}
+                    <div class="profile-details">
+                        {% if usuario.data_nascimento %}
+                            <div><i class="fa fa-birthday-cake"></i> <b>Aniversário:</b> {{ usuario.data_nascimento|date:"d/m/Y" }}</div>
+                        {% endif %}
+                        {% if usuario.localizacao %}
+                            <div><i class="fa fa-map-marker"></i> <b>Localização:</b> {{ usuario.localizacao }}</div>
+                        {% endif %}
+                        {% if usuario.site %}
+                            <div><i class="fa fa-globe"></i> <b>Website:</b> <a href="{{ usuario.site }}" target="_blank">{{ usuario.site }}</a></div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
             
@@ -88,18 +100,37 @@
                     <h3>Seguidores ({{ total_seguidores }})</h3>
                 </div>
                 <div class="section-content">
+                    {% if seguidores_com_avatar %}
+                        <div class="followers-grid">
+                            {% for seguidor in seguidores_com_avatar %}
+                                <a href="{% url 'perfil' username=seguidor.username %}" title="{{ seguidor.get_display_name }}" class="follower-avatar">
+                                    {% if seguidor.avatar %}
+                                        <img src="{{ seguidor.avatar.url }}" alt="{{ seguidor.username }}" class="avatar-small">
+                                    {% else %}
+                                        <img src="{% static 'images/default-avatar.png' %}" alt="{{ seguidor.username }}" class="avatar-small">
+                                    {% endif %}
+                                </a>
+                            {% endfor %}
+                        </div>
+                        {% if total_seguidores > 12 %}
+                            <div class="followers-more">
+                                <small>e mais {{ total_seguidores|add:"-12" }} seguidores...</small>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">Nenhum seguidor ainda</p>
+                    {% endif %}
+                    
                     {% if ultimos_visitantes %}
-                        <div style="margin-top: 12px;">
+                        <div class="mt-16">
                             <small><b>Últimos visitantes:</b></small>
-                            <div class="online-members" style="margin-top:8px;">
+                            <div class="recent-visitors mt-8">
                                 {% for visita in ultimos_visitantes %}
                                     <a href="{% url 'perfil' username=visita.visitante.username %}" title="{{ visita.visitante.username }} - {{ visita.timestamp|date:'d/m/Y' }}">
                                         {% if visita.visitante.avatar %}
-                                            <img src="{{ visita.visitante.avatar.url }}" alt="{{ visita.visitante.username }}" 
-                                                 class="avatar" style="width:32px; height:32px; margin-right:4px;">
+                                            <img src="{{ visita.visitante.avatar.url }}" alt="{{ visita.visitante.username }}" class="avatar-tiny">
                                         {% else %}
-                                            <img src="{% static 'images/default-avatar.png' %}" alt="{{ visita.visitante.username }}" 
-                                                 class="avatar" style="width:32px; height:32px; margin-right:4px;">
+                                            <img src="{% static 'images/default-avatar.png' %}" alt="{{ visita.visitante.username }}" class="avatar-tiny">
                                         {% endif %}
                                     </a>
                                 {% endfor %}
@@ -111,44 +142,116 @@
         </aside>
         
         <!-- Conteúdo principal -->
-        <main class="forum-main" style="flex:3;">
-            <div class="profile-stats forum-info" style="display:flex; gap:32px; margin-bottom:24px;">
-                <div>
-                    <div class="stat-label">Posts</div>
-                    <div class="stat-value">{{ usuario.total_itens|default:"0" }}</div>
+        <main class="profile-main">
+            <div class="profile-stats forum-info">
+                <div class="stat-item">
+                    <div class="stat-label">Posts/Tópicos</div>
+                    <div class="stat-value">{{ usuario.posts_count|default:"0" }}</div>
                 </div>
-                <div>
+                <div class="stat-item">
                     <div class="stat-label">Respostas</div>
                     <div class="stat-value">{{ usuario.answers|default:"0" }}</div>
                 </div>
-                <div>
+                <div class="stat-item">
                     <div class="stat-label">Reputação</div>
                     <div class="stat-value">{{ usuario.reputacao|default:"0" }}</div>
                 </div>
             </div>
 
             <div class="profile-activity forum-info">
-                <h3>Atividades recentes</h3>
-                {% if atividades %}
-                    {% for atividade in atividades %}
-                        <div class="post-item" style="margin-bottom:18px;">
-                            <span class="post-title">
-                                <a href="{{ atividade.url }}">{{ atividade.titulo }}</a>
-                            </span>
-                            <div class="post-meta">{{ atividade.data|date:"d/m/Y H:i" }}</div>
-                            <div class="post-content">{{ atividade.conteudo }}</div>
-                        </div>
-                    {% endfor %}
+                <h3>
+                    <i class="fa fa-clock-o"></i> Atividades Recentes
+                    {% if is_own_profile %}
+                        <small>(suas atividades)</small>
+                    {% endif %}
+                </h3>
+                {% if atividades_usuario %}
+                    <div class="activities-list">
+                        {% for atividade in atividades_usuario %}
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    {% if atividade.tipo == 'NOVO_THREAD' %}
+                                        <i class="fa fa-comment text-primary"></i>
+                                    {% elif atividade.tipo == 'NOVO_POST' %}
+                                        <i class="fa fa-file-text text-info"></i>
+                                    {% elif atividade.tipo == 'NOVA_REPLY' %}
+                                        <i class="fa fa-reply text-success"></i>
+                                    {% elif 'REACAO' in atividade.tipo %}
+                                        <i class="fa fa-heart text-danger"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-text">
+                                        {{ atividade.get_narrative_text }}
+                                        {% if atividade.get_target_post %}
+                                            <a href="{% url 'postagem_detail' atividade.get_target_post.assunto.categoria.slug atividade.get_target_post.assunto.slug atividade.get_target_post.id %}" class="activity-link">
+                                                "{{ atividade.get_target_post.titulo|truncatechars:50 }}"
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                    <div class="activity-time">
+                                        <small class="text-muted">{{ atividade.criado_em|timesince }} atrás</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
                 {% else %}
-                    <div class="post-item" style="margin-bottom:18px; text-align:center; color:#bbb;">
-                        <p>Nenhuma atividade recente encontrada.</p>
-                        {% if is_own_profile %}
-                            <p><small>Comece participando do fórum para ver suas atividades aqui!</small></p>
-                        {% endif %}
+                    <div class="no-activities">
+                        <p class="text-muted">
+                            {% if is_own_profile %}
+                                Você ainda não possui atividades recentes. Comece participando do fórum!
+                            {% else %}
+                                Este usuário ainda não possui atividades recentes.
+                            {% endif %}
+                        </p>
                     </div>
                 {% endif %}
             </div>
         </main>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// AJAX para seguir/deixar de seguir
+document.addEventListener('DOMContentLoaded', function() {
+    const followForm = document.querySelector('.follow-form');
+    if (followForm) {
+        followForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const btn = document.getElementById('follow-btn');
+                    if (data.seguindo) {
+                        btn.innerHTML = '<i class="fa fa-user-minus"></i> Deixar de Seguir';
+                        btn.className = 'btn btn-secondary';
+                    } else {
+                        btn.innerHTML = '<i class="fa fa-user-plus"></i> Seguir';
+                        btn.className = 'btn btn-primary';
+                    }
+                    
+                    // Atualizar contador de seguidores
+                    const followersTitle = document.querySelector('.sidebar-section h3');
+                    if (followersTitle) {
+                        followersTitle.textContent = `Seguidores (${data.total_seguidores})`;
+                    }
+                }
+            })
+            .catch(error => console.error('Erro:', error));
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -2,12 +2,6 @@
 {% load static %}
 {% load core_extras %}
 
-{% block title %}Últimas Atividades - MyForum{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/atividades.css' %}">
-{% endblock %}
-
 {% block content %}
 <div class="container">
     <!-- Navigation -->
@@ -128,7 +122,7 @@
                     </span>
 
                     <span class="atividade-narrative">
-                        <a href="{% url 'accounts:perfil' atividade.usuario.username %}" 
+                        <a href="{% url 'perfil' atividade.usuario.username %}" 
                            class="user-link {{ atividade.usuario|get_user_role_class }}">
                             {{ atividade.usuario.username }}
                             <span class="user-role">{{ atividade.usuario|get_user_role_display }}</span>
@@ -141,7 +135,7 @@
                         {% endif %}
                         
                         {% if atividade.get_target_post.assunto %}
-                            em <a href="{% url 'home:assunto_detail' atividade.get_target_post.assunto.categoria.slug atividade.get_target_post.assunto.slug %}" 
+                            em <a href="{% url 'assunto_detail' atividade.get_target_post.assunto.categoria.slug atividade.get_target_post.assunto.slug %}" 
                                   class="forum-link">{{ atividade.get_target_post.assunto.nome }}</a>
                         {% endif %}
                     </span>
@@ -284,29 +278,4 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(checkNewActivities, 60000);
 });
 </script>
-
-<style>
-.new-activity-notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #48bb78;
-    color: white;
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-}
-
-.new-activity-notification a {
-    color: #ffd700;
-    text-decoration: underline;
-}
-
-@keyframes slideIn {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
-}
-</style>
 {% endblock %}

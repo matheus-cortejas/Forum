@@ -2,10 +2,6 @@
 {% load static %}
 {% load core_extras %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/atividades_widget.css' %}">
-{% endblock %}
-
 {% block content %}
 <div class="forum-wrapper">
     <div class="forum-main">
@@ -119,9 +115,6 @@
             </div>
         </div>
 
-        <!-- Atividades Recentes -->
-        {% atividades_recentes_widget 10 %}
-
         <!-- Recent Posts -->
         <div class="sidebar-section">
             <div class="section-header">
@@ -166,7 +159,6 @@
                 <div class="stat-item">
                     <span class="stat-label">Online Record:</span>
                     <span class="stat-value">{{ forum_stats.online_record|default:"0" }} users</span>
-                    <!-- Substitua por variável se tiver esse dado -->
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Newest Member:</span>

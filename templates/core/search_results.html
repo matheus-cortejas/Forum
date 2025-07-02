@@ -5,15 +5,52 @@
 <div class="search-results-container">
     <div class="search-summary">
         {% if busca_realizada %}
-            <h2>Resultados da Pesquisa</h2>
+            <h2>
+                {% if search_type == 'usuarios' %}
+                    Resultados da Pesquisa de Usuários
+                {% elif search_type == 'postagens_membro' %}
+                    Postagens de {{ membro_encontrado.username|default:membro_username }}
+                {% else %}
+                    Resultados da Pesquisa
+                {% endif %}
+            </h2>
+            
+            {% if search_type == 'postagens_membro' %}
+                {% if membro_encontrado %}
+                    <div class="member-info">
+                        <img src="{{ membro_encontrado.get_avatar_url }}" alt="{{ membro_encontrado.username }}" class="member-avatar">
+                        <div class="member-details">
+                            <h3><a href="{% url 'perfil' membro_encontrado.username %}">{{ membro_encontrado.username }}</a></h3>
+                            <p>Total de mensagens: {{ membro_encontrado.total_itens|default:"0" }}</p>
+                            <p>Membro desde: {{ membro_encontrado.date_joined|date:"d/m/Y" }}</p>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="no-results">Usuário "{{ membro_username }}" não encontrado.</p>
+                {% endif %}
+            {% endif %}
+            
             {% if total_resultados > 0 %}
                 <p class="results-count">
-                    {{ total_resultados }} resultado{{ total_resultados|pluralize }} encontrado{{ total_resultados|pluralize }}
-                    {% if termo %} para <span class="highlight">"{{ termo }}"</span>{% endif %}
-                    {% if autor %} por <span class="highlight">{{ autor }}</span>{% endif %}
-                    {% if subforum %} em <span class="highlight">{{ subforum }}</span>{% endif %}
+                    {{ total_resultados }} 
+                    {% if search_type == 'usuarios' %}
+                        usuário{{ total_resultados|pluralize }} encontrado{{ total_resultados|pluralize }}
+                        {% if username %} para <span class="highlight">"{{ username }}"</span>{% endif %}
+                    {% elif search_type == 'postagens_membro' %}
+                        post{{ total_resultados|pluralize }} encontrado{{ total_resultados|pluralize }}
+                        {% if tipo_conteudo != 'todos' %} ({{ tipo_conteudo }}){% endif %}
+                    {% else %}
+                        resultado{{ total_resultados|pluralize }} encontrado{{ total_resultados|pluralize }}
+                        {% if termo %} para <span class="highlight">"{{ termo }}"</span>{% endif %}
+                        {% if autor %} por <span class="highlight">{{ autor }}</span>{% endif %}
+                        {% if subforum %} em <span class="highlight">{{ subforum }}</span>{% endif %}
+                    {% endif %}
                 </p>
-            {% else %}
+            {% elif membro_encontrado and search_type == 'postagens_membro' %}
+                <p class="no-results">
+                    Este membro ainda não fez nenhuma postagem{% if tipo_conteudo != 'todos' %} do tipo {{ tipo_conteudo }}{% endif %}.
+                </p>
+            {% elif search_type != 'postagens_membro' %}
                 <p class="no-results">
                     Não foram encontrados resultados para sua pesquisa.
                 </p>
@@ -25,7 +62,131 @@
         <a href="{% url 'search' %}" class="btn btn-secondary">Nova Pesquisa</a>
     </div>
 
-    {% if resultados %}
+    {% if resultados and search_type == 'postagens_membro' and membro_encontrado %}
+    <!-- Resultados de postagens de membro -->
+    <div class="posts-table">
+        <div class="table-head">
+            <div class="status">Tipo</div>
+            <div class="subjects">Assunto</div>
+            <div class="replies">Respostas/Views</div>
+            <div class="last-reply">Data</div>
+        </div>
+        
+        {% for post in resultados %}
+        <div class="table-row">
+            <div class="status">
+                <i class="fa {% if post.tipo == 'THREAD' %}fa-comment{% else %}fa-file-text{% endif %}"></i>
+                <small>{{ post.get_tipo_display }}</small>
+            </div>
+            
+            <div class="subjects">
+                <a href="{% if post.tipo == 'THREAD' %}{% url 'thread_detail' categoria_slug=post.assunto.categoria.slug assunto_slug=post.assunto.slug thread_id=post.id %}{% else %}{% url 'post_detail' categoria_slug=post.assunto.categoria.slug assunto_slug=post.assunto.slug post_id=post.id %}{% endif %}">
+                    {{ post.titulo }}
+                </a>
+                <br>
+                <span>
+                    Em <b><a href="{% url 'assunto_detail' categoria_slug=post.assunto.categoria.slug assunto_slug=post.assunto.slug %}">{{ post.assunto.nome }}</a></b>
+                </span>
+            </div>
+            
+            <div class="replies">
+                {{ post.respostas_count|default:"0" }} respostas <br>
+                {{ post.visualizacoes|default:"0" }} views
+            </div>
+            
+            <div class="last-reply">
+                {{ post.criado_em|date:"d/m/Y H:i" }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Paginação para postagens de membro -->
+    {% if resultados.has_other_pages %}
+    <div class="pagination">
+        {% if resultados.has_previous %}
+            <a href="?search_type=postagens_membro&membro_username={{ membro_username }}&tipo_conteudo={{ tipo_conteudo }}&membro_data_inicio={{ membro_data_inicio }}&membro_data_fim={{ membro_data_fim }}&membro_subforum={{ membro_subforum }}&membro_ordenacao={{ membro_ordenacao }}&page={{ resultados.previous_page_number }}">&laquo; Anterior</a>
+        {% endif %}
+        
+        {% for i in resultados.paginator.page_range %}
+            {% if i >= resultados.number|add:"-2" and i <= resultados.number|add:"2" %}
+                {% if i == resultados.number %}
+                    <span class="current">{{ i }}</span>
+                {% else %}
+                    <a href="?search_type=postagens_membro&membro_username={{ membro_username }}&tipo_conteudo={{ tipo_conteudo }}&membro_data_inicio={{ membro_data_inicio }}&membro_data_fim={{ membro_data_fim }}&membro_subforum={{ membro_subforum }}&membro_ordenacao={{ membro_ordenacao }}&page={{ i }}">{{ i }}</a>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        
+        {% if resultados.has_next %}
+            <a href="?search_type=postagens_membro&membro_username={{ membro_username }}&tipo_conteudo={{ tipo_conteudo }}&membro_data_inicio={{ membro_data_inicio }}&membro_data_fim={{ membro_data_fim }}&membro_subforum={{ membro_subforum }}&membro_ordenacao={{ membro_ordenacao }}&page={{ resultados.next_page_number }}">Próxima &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% elif resultados and search_type == 'usuarios' %}
+    <!-- Resultados de usuários -->
+    <div class="users-table">
+        <div class="table-head">
+            <div class="avatar">Avatar</div>
+            <div name="user-info">Usuário</div>
+            <div class="posts-count">Posts</div>
+            <div class="join-date">Registro</div>
+        </div>
+        
+        {% for user in resultados %}
+        <div class="table-row">
+            <div class="avatar">
+                {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" alt="{{ user.username }}">
+                {% else %}
+                    <div class="default-avatar">{{ user.username|first|upper }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="user-info">
+                <a href="{% url 'perfil' user.username %}">{{ user.username }}</a>
+                {% if user.first_name or user.last_name %}
+                    <br><span class="real-name">{{ user.first_name }} {{ user.last_name }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="posts-count">
+                {{ user.posts_count|default:"0" }} posts
+            </div>
+            
+            <div class="join-date">
+                {{ user.date_joined|date:"d/m/Y" }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Paginação para usuários -->
+    {% if resultados.has_other_pages %}
+    <div class="pagination">
+        {% if resultados.has_previous %}
+            <a href="?search_type=usuarios&username={{ username }}&email={{ email }}&data_registro_inicio={{ data_registro_inicio }}&data_registro_fim={{ data_registro_fim }}&ordenacao_user={{ ordenacao_user }}&page={{ resultados.previous_page_number }}">&laquo; Anterior</a>
+        {% endif %}
+        
+        {% for i in resultados.paginator.page_range %}
+            {% if i >= resultados.number|add:"-2" and i <= resultados.number|add:"2" %}
+                {% if i == resultados.number %}
+                    <span class="current">{{ i }}</span>
+                {% else %}
+                    <a href="?search_type=usuarios&username={{ username }}&email={{ email }}&data_registro_inicio={{ data_registro_inicio }}&data_registro_fim={{ data_registro_fim }}&ordenacao_user={{ ordenacao_user }}&page={{ i }}">{{ i }}</a>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        
+        {% if resultados.has_next %}
+            <a href="?search_type=usuarios&username={{ username }}&email={{ email }}&data_registro_inicio={{ data_registro_inicio }}&data_registro_fim={{ data_registro_fim }}&ordenacao_user={{ ordenacao_user }}&page={{ resultados.next_page_number }}">Próxima &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% elif resultados %}
+    <!-- Resultados de posts (código existente) -->
     <div class="posts-table">
         <div class="table-head">
             <div class="status">Status</div>
@@ -47,7 +208,7 @@
                 <br>
                 <span>
                     Em <b><a href="{% url 'assunto_detail' categoria_slug=post.assunto.categoria.slug assunto_slug=post.assunto.slug %}">{{ post.assunto.nome }}</a></b> • 
-                    Por <b><a href="">{{ post.autor.username }}</a></b>
+                    Por <b><a href="{% url 'perfil' post.autor.username %}">{{ post.autor.username }}</a></b>
                 </span>
             </div>
             
@@ -63,7 +224,7 @@
         {% endfor %}
     </div>
     
-    <!-- Paginação -->
+    <!-- Paginação para posts (código existente) -->
     {% if resultados.has_other_pages %}
     <div class="pagination">
         {% if resultados.has_previous %}

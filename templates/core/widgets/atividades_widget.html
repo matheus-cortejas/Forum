@@ -22,7 +22,7 @@
 
             <div class="atividade-widget-content">
                 <div class="atividade-widget-text">
-                    <a href="{% url 'accounts:perfil' atividade.usuario.username %}" 
+                    <a href="{% url 'perfil' atividade.usuario.username %}" 
                        class="user-widget-link {{ atividade.usuario|get_user_role_class }}">
                         {{ atividade.usuario.username }}
                     </a>

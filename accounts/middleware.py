@@ -101,3 +101,39 @@ class OnlineUsersMiddleware(MiddlewareMixin):
                     return True, bot_name.title()
         
         return False, ''
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+    
+    def detect_bot(self, user_agent):
+        """Detectar se é um bot baseado no user agent"""
+        if not user_agent:
+            return False, ''
+        
+        user_agent_lower = user_agent.lower()
+        
+        for bot_name in self.BOT_USER_AGENTS:
+            if bot_name in user_agent_lower:
+                # Extrair nome específico do bot
+                if 'googlebot' in user_agent_lower:
+                    return True, 'Googlebot'
+                elif 'bingbot' in user_agent_lower:
+                    return True, 'Bingbot'
+                elif 'duckduckbot' in user_agent_lower:
+                    return True, 'DuckDuckBot'
+                elif 'facebookexternalhit' in user_agent_lower:
+                    return True, 'Facebook'
+                elif 'twitterbot' in user_agent_lower:
+                    return True, 'Twitter'
+                elif 'linkedinbot' in user_agent_lower:
+                    return True, 'LinkedIn'
+                elif 'telegrambot' in user_agent_lower:
+                    return True, 'Telegram'
+                elif 'discordbot' in user_agent_lower:
+                    return True, 'Discord'
+                else:
+                    return True, bot_name.title()
+        
+        return False, ''

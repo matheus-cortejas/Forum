@@ -7,7 +7,8 @@
 <div class="search-container">
     <div class="search-tabs">
         <button class="tab-btn active" data-tab="conteudo">Pesquisar Conteúdo</button>
-        <button class="tab-btn" data-tab="usuarios" disabled>Pesquisar Usuários</button>
+        <button class="tab-btn" data-tab="usuarios">Pesquisar Usuários</button>
+        <button class="tab-btn" data-tab="postagens-membro">Postagens de Membro</button>
     </div>
     <div class="tab-content active" id="tab-conteudo">
         <form method="get" action="{% url 'search_result' %}" class="search-form">
@@ -64,9 +65,88 @@
         </form>
     </div>
     <div class="tab-content" id="tab-usuarios">
-        <div class="search-users-disabled">
-            <p>Pesquisa de usuários será implementada em breve.</p>
-        </div>
+        <form method="get" action="{% url 'search_result' %}" class="search-form">
+            <input type="hidden" name="search_type" value="usuarios">
+            <div class="search-fields">
+                <div class="field-group">
+                    <label for="username">Nome do usuário:</label>
+                    <input type="text" id="username" name="username" placeholder="Digite o nome do usuário...">
+                </div>
+                <div class="field-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" placeholder="Email do usuário (opcional)">
+                </div>
+                <div class="field-group">
+                    <label>Data de registro:</label>
+                    <input type="date" name="data_registro_inicio" placeholder="De">
+                    <input type="date" name="data_registro_fim" placeholder="Até">
+                </div>
+                <div class="field-group">
+                    <label>Ordenar por:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="ordenacao_user" value="username" checked> Nome</label>
+                        <label><input type="radio" name="ordenacao_user" value="date_joined"> Data de Registro</label>
+                        <label><input type="radio" name="ordenacao_user" value="posts_count"> Número de Posts</label>
+                    </div>
+                </div>
+            </div>
+            <div class="search-actions">
+                <button type="submit" class="btn btn-primary">Pesquisar Usuários</button>
+            </div>
+        </form>
+    </div>
+    <div class="tab-content" id="tab-postagens-membro">
+        <form method="get" action="{% url 'search_result' %}" class="search-form">
+            <input type="hidden" name="search_type" value="postagens_membro">
+            <div class="search-fields">
+                <div class="field-group">
+                    <label for="membro_username">Nome do membro:</label>
+                    <input type="text" id="membro_username" name="membro_username" placeholder="Digite o nome do membro..." required>
+                    <small class="help-text">Digite o nome de usuário exato ou parte dele</small>
+                </div>
+                <div class="field-group">
+                    <label>Tipo de conteúdo:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="tipo_conteudo" value="todos" checked> Todos</label>
+                        <label><input type="radio" name="tipo_conteudo" value="THREAD"> Apenas Tópicos</label>
+                        <label><input type="radio" name="tipo_conteudo" value="POST"> Apenas Posts</label>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label>Período:</label>
+                    <input type="date" name="membro_data_inicio" placeholder="De">
+                    <input type="date" name="membro_data_fim" placeholder="Até">
+                </div>
+                <div class="field-group">
+                    <label for="membro_subforum">Fórum específico:</label>
+                    <input type="text" id="membro_subforum" name="membro_subforum" placeholder="Nome do fórum (opcional)">
+                </div>
+                <div class="field-group">
+                    <label>Ordenar por:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="membro_ordenacao" value="date" checked> Data</label>
+                        <label><input type="radio" name="membro_ordenacao" value="replies"> Mais Respondidos</label>
+                        <label><input type="radio" name="membro_ordenacao" value="views"> Mais Visualizados</label>
+                    </div>
+                </div>
+            </div>
+            <div class="search-actions">
+                <button type="submit" class="btn btn-primary">Buscar Postagens</button>
+            </div>
+        </form>
     </div>
 </div>
+
+<script>
+// Verificar se deve abrir tab específica baseado na URL
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    
+    if (tab === 'postagens-membro') {
+        // Ativar tab de postagens de membro
+        document.querySelector('.tab-btn[data-tab="postagens-membro"]').click();
+    }
+});
+</script>
 {% endblock %}
