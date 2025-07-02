@@ -1,5 +1,3 @@
-from django.db import models
-
 # Create your models here.
 from django.db import models
 from django.utils.text import slugify
@@ -50,4 +48,4 @@ class Assunto(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.titulo
+        return self.titulo    

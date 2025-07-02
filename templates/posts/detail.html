@@ -40,7 +40,7 @@
                     {% endif %}
 
                     <div class="user-stats">
-                        <div>Posts: <u>{{ postagem.autor.total_itens|default:"0" }}</u></div>
+                        <div>Posts: <u>{{ postagem.autor.posts_count|default:"0" }}</u></div>
                         <div>Respostas: <u>{{ postagem.autor.answers|default:"0" }}</u></div>
                         <div>Reputação: <u>{{ postagem.autor.reputacao|default:"0" }}</u></div>
                     </div>
@@ -60,26 +60,33 @@
                         {% endif %}
                     </div>
 
-                    <!-- Sistema de Reações da Postagem -->
-                    {% if user.is_authenticated %}
+                    <!-- Sistema de Reações da Postagem - CORRIGIDO -->
                     <div class="reactions-container" data-type="postagem" data-target-id="{{ postagem.id }}">
+                        <!-- Mostrar reações existentes - USANDO MESMO MÉTODO DAS RESPOSTAS -->
+                        {% if postagem.reacoes.all %}
                         <div class="reactions-summary">
-                            {% for reacao in reacoes_postagem %}
-                                {% if reacao.count > 0 %}
-                                <div class="reaction-summary-item">
-                                    <img src="{{ reacao.reacao__icone.url }}" alt="{{ reacao.reacao__nome }}" class="reaction-icon-small">
-                                    <span class="reaction-count-small">{{ reacao.count }}</span>
-                                </div>
-                                {% endif %}
+                            {% regroup postagem.reacoes.all by reacao as grouped_reactions %}
+                            {% for reacao_group in grouped_reactions %}
+                            <div class="reaction-summary-item">
+                                <img src="{{ reacao_group.grouper.icone.url }}" alt="{{ reacao_group.grouper.nome }}" class="reaction-icon-small">
+                                <span class="reaction-count-small">{{ reacao_group.list|length }}</span>
+                            </div>
                             {% endfor %}
                         </div>
+                        {% endif %}
                         
-                        <button class="reaction-btn {% if user_reaction_postagem %}has-reaction{% endif %}" 
-                                {% if user_reaction_postagem %}data-user-reaction="{{ user_reaction_postagem.reacao.id }}"{% endif %}>
+                        <!-- Controles de reação -->
+                        {% if user.is_authenticated %}
+                        <button class="reaction-btn{% if postagem.reacoes.all %} has-reactions{% endif %}" 
+                                data-post-id="{{ postagem.id }}">
                             <i class="fa fa-smile-o"></i>
-                            {% with total_reactions=reacoes_postagem|length %}
-                            <span class="reaction-count{% if not total_reactions %} d-none{% endif %}">
-                                {{ total_reactions }}
+                            {% with total_reactions=postagem.reacoes.all|length %}
+                            <span class="reaction-count">
+                                {% if total_reactions > 0 %}
+                                    {{ total_reactions }}
+                                {% else %}
+                                    Reagir
+                                {% endif %}
                             </span>
                             {% endwith %}
                         </button>
@@ -96,8 +103,26 @@
                                 {% endfor %}
                             </div>
                         </div>
+                        {% else %}
+                        <!-- Para visitantes: mostrar apenas informação -->
+                        {% if postagem.reacoes.all %}
+                        <div class="reactions-guest-info">
+                            <span class="guest-reaction-text">
+                                <i class="fa fa-smile-o"></i>
+                                {{ postagem.reacoes.all|length }} reação{{ postagem.reacoes.all|length|pluralize:"ões" }}
+                                • <a href="{% url 'login' %}">Entre</a> para reagir
+                            </span>
+                        </div>
+                        {% else %}
+                        <div class="reactions-guest-info">
+                            <span class="guest-reaction-text">
+                                <i class="fa fa-smile-o"></i>
+                                <a href="{% url 'login' %}">Entre</a> para reagir
+                            </span>
+                        </div>
+                        {% endif %}
+                        {% endif %}
                     </div>
-                    {% endif %}
 
                     <!-- Ações da Postagem -->
                     {% if user.is_authenticated %}
@@ -111,6 +136,13 @@
                             <i class="fa fa-edit"></i> Editar
                         </button>
                         {% endif %}
+                    </div>
+                    {% else %}
+                    <!-- Ações para visitantes -->
+                    <div class="actions-guest">
+                        <a href="{% url 'login' %}" class="btn btn-primary">
+                            <i class="fa fa-sign-in"></i> Entre para responder
+                        </a>
                     </div>
                     {% endif %}
                 </div>
@@ -175,6 +207,10 @@
                 <button onclick="Reply.show()" class="btn btn-primary">
                     <i class="fa fa-reply"></i> Adicionar Primeira Resposta
                 </button>
+                {% else %}
+                <a href="{% url 'login' %}" class="btn btn-primary">
+                    <i class="fa fa-sign-in"></i> Entre para responder
+                </a>
                 {% endif %}
             </div>
         </div>

@@ -4,6 +4,7 @@ from django.db.models import Q, Count, Max, Prefetch
 from .models import Categoria, Assunto
 from posts.models import Postagem as Post, Reply, Tag, TagEspecifica
 from django.contrib.auth import get_user_model
+from datetime import datetime
 
 def home(request):
     context = {
@@ -17,74 +18,167 @@ def assunto_detail(request, categoria_slug, assunto_slug):
     
     # Parâmetros de filtro
     tipo_filtro = request.GET.get('tipo', 'all')
-    prefixo = request.GET.get('prefixo', '')
-    tags_usuario = request.GET.get('tags', '')
-    iniciada_por = request.GET.get('autor', '')
+    prefixo = request.GET.get('prefixo', '').strip()
+    tags_usuario = request.GET.get('tags', '').strip()
+    iniciada_por = request.GET.get('autor', '').strip()
+    data_inicio = request.GET.get('data_inicio', '').strip()
+    data_fim = request.GET.get('data_fim', '').strip()
     tipo_organizacao = request.GET.get('ordem', 'recente')
     page = request.GET.get('page', 1)
     
     # Query base para threads e posts
     queryset = Post.objects.filter(assunto=assunto)
     
-    # Filtro por tipo (thread/post/todos)
+    # ===== APLICAR FILTROS =====
+    
+    # 1. Filtro por tipo (thread/post/todos)
     if tipo_filtro == 'thread':
         queryset = queryset.filter(tipo='THREAD')
     elif tipo_filtro == 'post':
         queryset = queryset.filter(tipo='POST')
-    # Se 'all', não filtra por tipo
     
-    # Filtro por prefixo (tag do sistema)
+    # 2. Filtro por prefixo (tag do sistema)
     if prefixo:
-        try:
-            tag_sistema = Tag.objects.get(slug=prefixo, is_sistema=True)
-            queryset = queryset.filter(tag_sistema=tag_sistema)
-        except Tag.DoesNotExist:
-            pass
+        queryset = queryset.filter(
+            Q(tag_sistema__slug=prefixo) | 
+            Q(tag_sistema__nome__icontains=prefixo)
+        )
     
-    # Filtro por tags de usuário
+    # 3. Filtro por tags de usuário
     if tags_usuario:
         tags_list = [tag.strip() for tag in tags_usuario.split(',') if tag.strip()]
         if tags_list:
+            # Usar Q objects para OR entre tags
+            tag_queries = Q()
             for tag in tags_list:
-                queryset = queryset.filter(tags_especificas__nome__icontains=tag)
+                tag_queries |= Q(tags_especificas__nome__icontains=tag)
+            queryset = queryset.filter(tag_queries).distinct()
     
-    # Filtro por autor
+    # 4. Filtro por autor - CORRIGIDO para múltiplos usuários
     if iniciada_por:
+        queryset = queryset.filter(
+            Q(autor__username__icontains=iniciada_por) |
+            Q(autor__first_name__icontains=iniciada_por) |
+            Q(autor__last_name__icontains=iniciada_por)
+        ).distinct()
+    
+    # 5. Filtro por data de início
+    if data_inicio:
         try:
-            autor = User.objects.get(username__icontains=iniciada_por)
-            queryset = queryset.filter(autor=autor)
-        except User.DoesNotExist:
+            data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d')
+            queryset = queryset.filter(criado_em__date__gte=data_inicio_obj.date())
+        except ValueError:
             pass
     
-    # Aplicar select_related e prefetch_related
-    queryset = queryset.select_related('autor', 'tag_sistema').prefetch_related(
+    # 6. Filtro por data de fim
+    if data_fim:
+        try:
+            data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d')
+            queryset = queryset.filter(criado_em__date__lte=data_fim_obj.date())
+        except ValueError:
+            pass
+    
+    # ===== OTIMIZAÇÕES DE QUERY =====
+    
+    # Aplicar select_related e prefetch_related ANTES da ordenação
+    queryset = queryset.select_related(
+        'autor', 
+        'tag_sistema',
+        'assunto',
+        'assunto__categoria'
+    ).prefetch_related(
         'tags_especificas',
-        Prefetch('replies', queryset=Reply.objects.select_related('autor'))  # CORRETO
+        Prefetch(
+            'replies', 
+            queryset=Reply.objects.select_related('autor').order_by('-criado_em')
+        )
     )
     
-    # Ordenação
+    # ===== ORDENAÇÃO =====
+    
     if tipo_organizacao == 'antigo':
         queryset = queryset.order_by('criado_em')
     elif tipo_organizacao == 'visualizacoes':
-        queryset = queryset.order_by('-visualizacoes')
+        queryset = queryset.order_by('-visualizacoes', '-criado_em')
+    elif tipo_organizacao == 'respostas':
+        queryset = queryset.annotate(
+            total_respostas=Count('replies')
+        ).order_by('-total_respostas', '-criado_em')
     elif tipo_organizacao == 'atividade':
         queryset = queryset.annotate(
             ultima_atividade=Max('replies__criado_em')
         ).order_by('-ultima_atividade', '-criado_em')
+    elif tipo_organizacao == 'autor':
+        queryset = queryset.order_by('autor__username', '-criado_em')
     else:  # 'recente' (padrão)
         queryset = queryset.order_by('-criado_em')
     
-    # Separar threads fixas (apenas se mostrando threads)
+    # ===== SEPARAR THREADS FIXAS =====
+    
     threads_fixas = []
     if tipo_filtro in ['all', 'thread']:
-        threads_fixas = queryset.filter(tipo='THREAD', fixo=True).order_by('-criado_em')
+        # Threads fixas com os mesmos filtros aplicados
+        threads_fixas_query = Post.objects.filter(
+            assunto=assunto,
+            tipo='THREAD',
+            fixo=True
+        )
+        
+        # Aplicar os mesmos filtros às threads fixas
+        if prefixo:
+            threads_fixas_query = threads_fixas_query.filter(
+                Q(tag_sistema__slug=prefixo) | 
+                Q(tag_sistema__nome__icontains=prefixo)
+            )
+        
+        if tags_usuario:
+            tags_list = [tag.strip() for tag in tags_usuario.split(',') if tag.strip()]
+            if tags_list:
+                tag_queries = Q()
+                for tag in tags_list:
+                    tag_queries |= Q(tags_especificas__nome__icontains=tag)
+                threads_fixas_query = threads_fixas_query.filter(tag_queries).distinct()
+        
+        if iniciada_por:
+            threads_fixas_query = threads_fixas_query.filter(
+                Q(autor__username__icontains=iniciada_por) |
+                Q(autor__first_name__icontains=iniciada_por) |
+                Q(autor__last_name__icontains=iniciada_por)
+            ).distinct()
+        
+        if data_inicio:
+            try:
+                data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d')
+                threads_fixas_query = threads_fixas_query.filter(criado_em__date__gte=data_inicio_obj.date())
+            except ValueError:
+                pass
+        
+        if data_fim:
+            try:
+                data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d')
+                threads_fixas_query = threads_fixas_query.filter(criado_em__date__lte=data_fim_obj.date())
+            except ValueError:
+                pass
+        
+        threads_fixas = threads_fixas_query.select_related(
+            'autor', 'tag_sistema'
+        ).prefetch_related('tags_especificas').order_by('-criado_em')
+        
         # Remover threads fixas da query principal para evitar duplicação
         queryset = queryset.exclude(tipo='THREAD', fixo=True)
     
-    # Paginação mantendo filtros
-    paginator = Paginator(queryset, 20)
+    # ===== PAGINAÇÃO =====
     
-    # Criar URL para manter filtros na paginação
+    paginator = Paginator(queryset, 20)
+    total_resultados = paginator.count + len(threads_fixas)
+    
+    try:
+        postagens = paginator.page(page)
+    except:
+        postagens = paginator.page(1)
+    
+    # ===== CONSTRUIR URL DE FILTROS =====
+    
     filtros_url = []
     if tipo_filtro != 'all':
         filtros_url.append(f'tipo={tipo_filtro}')
@@ -94,36 +188,67 @@ def assunto_detail(request, categoria_slug, assunto_slug):
         filtros_url.append(f'tags={tags_usuario}')
     if iniciada_por:
         filtros_url.append(f'autor={iniciada_por}')
+    if data_inicio:
+        filtros_url.append(f'data_inicio={data_inicio}')
+    if data_fim:
+        filtros_url.append(f'data_fim={data_fim}')
     if tipo_organizacao != 'recente':
         filtros_url.append(f'ordem={tipo_organizacao}')
     
     filtros_query_string = '&'.join(filtros_url)
     
-    try:
-        postagens = paginator.page(page)
-    except:
-        postagens = paginator.page(1)
+    # ===== DADOS PARA SIDEBAR (CORRIGIDOS) =====
     
-    # Buscar últimos posts para sidebar (não afetado por filtros)
+    # Últimos posts
     ultimos_posts = Post.objects.filter(
         assunto=assunto,
         tipo='POST'
     ).select_related('autor', 'tag_sistema').order_by('-criado_em')[:10]
+    
+    # Tags mais usadas no assunto - CORRIGIDO
+    tags_populares = TagEspecifica.objects.filter(
+        postagem__assunto=assunto
+    ).annotate(
+        uso_count=Count('postagem')
+    ).order_by('-uso_count')[:10]
+    
+    # Autores mais ativos no assunto - CORRIGIDO
+    autores_ativos = User.objects.filter(
+        postagem__assunto=assunto
+    ).annotate(
+        total_posts_assunto=Count('postagem')  # Mudado de 'posts_count' para 'total_posts_assunto'
+    ).order_by('-total_posts_assunto')[:5]
+    
+    # ===== CONTEXT =====
     
     context = {
         'assunto': assunto,
         'threads_fixas': threads_fixas,
         'postagens': postagens,
         'ultimos_posts': ultimos_posts,
+        'tags_populares': tags_populares,
+        'autores_ativos': autores_ativos,
         'filtros_ativos': {
             'tipo': tipo_filtro,
             'prefixo': prefixo,
             'tags': tags_usuario,
             'autor': iniciada_por,
+            'data_inicio': data_inicio,
+            'data_fim': data_fim,
             'ordem': tipo_organizacao,
         },
         'filtros_query_string': filtros_query_string,
-        'total_resultados': paginator.count,
+        'total_resultados': total_resultados,
+        # Verificar se há filtros ativos
+        'tem_filtros_ativos': any([
+            tipo_filtro != 'all',
+            prefixo,
+            tags_usuario,
+            iniciada_por,
+            data_inicio,
+            data_fim,
+            tipo_organizacao != 'recente'
+        ]),
     }
     
     return render(request, 'forum/assunto_detail.html', context)

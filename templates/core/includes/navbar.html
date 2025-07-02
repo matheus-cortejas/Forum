@@ -50,15 +50,15 @@
         
         <div class="nav-buttons">
             {% if user.is_authenticated %}
-                <form action="{% url 'search' %}" method="GET" class="search-form">
-                    <input type="text" name="q" placeholder="Pesquisar...">
+                <form action="{% url 'search_result' %}" method="GET" class="search-form">
+                    <input type="text" name="termo" placeholder="Pesquisar..." required>
                     <button type="submit">Buscar</button>
                 </form>
                 <div class="nav-item"><a href="{% url 'profile' %}">Meu Perfil</a></div>           
                 <div class="nav-item"><a href="{% url 'logout' %}">Sair</a></div>
             {% else %}
-                <form action="{% url 'search' %}" method="GET" class="search-form">
-                    <input type="text" name="q" placeholder="Pesquisar...">
+                <form action="{% url 'search_result' %}" method="GET" class="search-form">
+                    <input type="text" name="termo" placeholder="Pesquisar..." required>
                     <button type="submit">Buscar</button>
                 </form>
                 <div class="nav-item"><a href="{% url 'login' %}">Login</a></div>

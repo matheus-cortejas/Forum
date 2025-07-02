@@ -1,8 +1,9 @@
 from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
+from datetime import timedelta
 from .models import UsuarioOnline
 import re
-
+import random
 
 class OnlineUsersMiddleware(MiddlewareMixin):
     """Middleware para rastrear usuários online"""
@@ -137,3 +138,16 @@ class OnlineUsersMiddleware(MiddlewareMixin):
                     return True, bot_name.title()
         
         return False, ''
+
+class CleanupOnlineUsersMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Durante desenvolvimento, pode ser mais agressivo (10% das requisições)
+        if random.randint(1, 10) == 1:
+            cutoff_time = timezone.now() - timedelta(minutes=30)
+            UsuarioOnline.objects.filter(ultima_atividade__lt=cutoff_time).delete()
+        
+        response = self.get_response(request)
+        return response

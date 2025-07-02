@@ -124,3 +124,28 @@ class Pesquisa(models.Model):
 
     def __str__(self):
         return f'Pesquisa: {self.termo} por {self.usuario}'
+    
+class OnlineRecord(models.Model):
+    record_count = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Record de Usuários Online"
+    
+    def __str__(self):
+        return f"Record: {self.record_count} usuários"
+    
+    @classmethod
+    def get_current(cls):
+        """Pega o record atual, cria se não existir"""
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj.record_count
+    
+    @classmethod
+    def update_if_higher(cls, new_count):
+        """Atualiza só se for maior"""
+        obj, created = cls.objects.get_or_create(pk=1)
+        if new_count > obj.record_count:
+            obj.record_count = new_count
+            obj.save()
+        return obj.record_count        

@@ -1,5 +1,5 @@
 {% load static %}
-{% load posts_extras %}  <!-- CARREGAR O TEMPLATE FILTER -->
+{% load posts_extras %}
 
 <div class="reply-item" id="reply-{{ reply.id }}">
     <div class="reply-author">
@@ -20,8 +20,8 @@
             {% endif %}
         </div>
 
-        <div class="author-stats">
-            <div>Posts: <u>{{ reply.autor.total_itens|default:"0" }}</u></div>
+        <div class="user-stats">
+            <div>Posts: <u>{{ reply.autor.posts_count|default:"0" }}</u></div>
             <div>Respostas: <u>{{ reply.autor.answers|default:"0" }}</u></div>
             <div>Reputação: <u>{{ reply.autor.reputacao|default:"0" }}</u></div>
         </div>
@@ -32,44 +32,91 @@
             {{ reply.conteudo|linebreaks }}
         </div>
 
-        <!-- Reações da resposta -->
-        {% if user.is_authenticated %}
+        <div class="reply-meta">
+            <span class="reply-date">{{ reply.criado_em|date:"d/m/Y H:i" }}</span>
+            {% if reply.atualizado_em != reply.criado_em %}
+                <span class="reply-edited">
+                    (Editado em {{ reply.atualizado_em|date:"d/m/Y H:i" }})
+                </span>
+            {% endif %}
+        </div>
+
+        <!-- Reações da resposta - SEMPRE VISÍVEL -->
         <div class="reactions-container" data-type="reply" data-target-id="{{ reply.id }}">
+            <!-- Mostrar reações existentes -->
+            {% if reply.reacoes.all %}
             <div class="reactions-summary">
-                {% for reacao in reply.reacoes_summary %}
-                    {% if reacao.count > 0 %}
-                    <div class="reaction-summary-item">
-                        <img src="{{ reacao.reacao__icone.url }}" alt="{{ reacao.reacao__nome }}" class="reaction-icon-small">
-                        <span class="reaction-count-small">{{ reacao.count }}</span>
-                    </div>
-                    {% endif %}
+                {% regroup reply.reacoes.all by reacao as grouped_reactions %}
+                {% for reacao_group in grouped_reactions %}
+                <div class="reaction-summary-item">
+                    <img src="{{ reacao_group.grouper.icone.url }}" alt="{{ reacao_group.grouper.nome }}" class="reaction-icon-small">
+                    <span class="reaction-count-small">{{ reacao_group.list|length }}</span>
+                </div>
                 {% endfor %}
             </div>
+            {% endif %}
             
-            <button class="reaction-btn{% if user_reactions_replies|get_item:reply.id %} has-reaction{% endif %}"
-                    {% with user_reaction=user_reactions_replies|get_item:reply.id %}
-                        {% if user_reaction %}data-user-reaction="{{ user_reaction.reacao.id }}"{% endif %}
-                    {% endwith %}>                
-                <i class="fa fa-smile-o"></i>
-                {% with total_reactions=reply.reacoes_summary|length %}
-                <span class="reaction-count{% if not total_reactions %} d-none{% endif %}">
-                    {{ total_reactions }}
-                </span>
-                {% endwith %}
-            </button>
-            
-            <div class="reactions-dropdown">
-                <div class="reactions-grid">
-                    {% for reacao in reacoes_disponiveis %}
-                    <div class="reaction-option" 
-                         data-reacao-id="{{ reacao.id }}"
-                         title="{{ reacao.nome }}">
-                        <img src="{{ reacao.icone.url }}" alt="{{ reacao.nome }}" class="reaction-icon">
-                        <span class="reaction-name">{{ reacao.nome }}</span>
+            <!-- Controles de reação -->
+            {% if user.is_authenticated %}
+                <!-- Botão de reagir para usuários logados -->
+                <button class="reaction-btn{% if reply.reacoes.all %} has-reactions{% endif %}"
+                        data-reply-id="{{ reply.id }}">                
+                    <i class="fa fa-smile-o"></i>
+                    {% with total_reactions=reply.reacoes.all|length %}
+                    <span class="reaction-count">
+                        {% if total_reactions > 0 %}
+                            {{ total_reactions }}
+                        {% else %}
+                            Reagir
+                        {% endif %}
+                    </span>
+                    {% endwith %}
+                </button>
+                
+                <div class="reactions-dropdown">
+                    <div class="reactions-grid">
+                        {% for reacao in reacoes_disponiveis %}
+                        <div class="reaction-option" 
+                             data-reacao-id="{{ reacao.id }}"
+                             title="{{ reacao.nome }}">
+                            <img src="{{ reacao.icone.url }}" alt="{{ reacao.nome }}" class="reaction-icon">
+                            <span class="reaction-name">{{ reacao.nome }}</span>
+                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
-            </div>
+            {% else %}
+                <!-- Para visitantes: mostrar informação sobre reações -->
+                {% if reply.reacoes.all %}
+                <div class="reactions-guest-info">
+                    <span class="guest-reaction-text">
+                        <i class="fa fa-smile-o"></i>
+                        {{ reply.reacoes.all|length }} reação{{ reply.reacoes.all|length|pluralize:"ões" }}
+                        • <a href="{% url 'login' %}">Entre</a> para reagir
+                    </span>
+                </div>
+                {% else %}
+                <div class="reactions-guest-info">
+                    <span class="guest-reaction-text">
+                        <i class="fa fa-smile-o"></i>
+                        <a href="{% url 'login' %}">Entre</a> para reagir
+                    </span>
+                </div>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Ações da resposta -->
+        {% if user.is_authenticated and user == reply.autor or user.is_staff %}
+        <div class="reply-actions">
+            <button onclick="Reply.edit({{ reply.id }})" class="btn btn-sm btn-secondary">
+                <i class="fa fa-edit"></i> Editar
+            </button>
+            {% if user.is_staff %}
+            <button onclick="Reply.delete({{ reply.id }})" class="btn btn-sm btn-danger">
+                <i class="fa fa-trash"></i> Excluir
+            </button>
+            {% endif %}
         </div>
         {% endif %}
     </div>

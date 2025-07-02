@@ -55,7 +55,8 @@
             <div class="section-content">
                 <form method="get" action="/accounts/members/">
                     <div class="input-group">
-                        <input type="text" class="form-control" name="busca" placeholder="Nome de usuário..." value="{{ busca_termo|default:'' }}">
+                        <input type="text" class="form-control" name="busca" placeholder="Nome de usuário..."
+                            value="{{ busca_termo|default:'' }}">
                         <button class="btn-search" type="submit">
                             <i class="fas fa-search"></i>
                         </button>
@@ -70,21 +71,21 @@
             </div>
             <div class="section-content">
                 {% if novos_membros %}
-                    {% for membro in novos_membros %}
-                    <div class="novo-membro">
-                        <div class="membro-avatar">
-                            <img src="{{ membro.get_avatar_url }}" alt="{{ membro.username }}" class="avatar">
-                        </div>
-                        <div class="membro-info">
-                            <a href="{% url 'perfil' membro.username %}" class="username">{{ membro.get_display_name }}</a>
-                            <div class="data-cadastro text-muted">{{ membro.date_joined|date:"d/m/Y" }}</div>
-                        </div>
+                {% for membro in novos_membros %}
+                <div class="novo-membro">
+                    <div class="membro-avatar">
+                        <img src="{{ membro.get_avatar_url }}" alt="{{ membro.username }}" class="avatar">
                     </div>
-                    {% endfor %}
+                    <div class="membro-info">
+                        <a href="{% url 'perfil' membro.username %}" class="username">{{ membro.get_display_name }}</a>
+                        <div class="data-cadastro text-muted">{{ membro.date_joined|date:"d/m/Y" }}</div>
+                    </div>
+                </div>
+                {% endfor %}
                 {% else %}
-                    <div class="no-members">
-                        <p class="text-muted">Nenhum novo membro nos últimos 7 dias</p>
-                    </div>
+                <div class="no-members">
+                    <p class="text-muted">Nenhum novo membro nos últimos 7 dias</p>
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -113,7 +114,7 @@
                         {% endfor %}
                     </ul>
                 </section>
-                
+
                 <section class="members-table">
                     <h2>Mais mensagens hoje</h2>
                     <ul>
@@ -132,7 +133,7 @@
                         {% endfor %}
                     </ul>
                 </section>
-                
+
                 <section class="members-table">
                     <h2>Maior pontuação de reação</h2>
                     <ul>
@@ -151,7 +152,7 @@
                         {% endfor %}
                     </ul>
                 </section>
-                
+
                 <section class="members-table">
                     <h2>Mais mensagens este mês</h2>
                     <ul>
@@ -170,7 +171,7 @@
                         {% endfor %}
                     </ul>
                 </section>
-                
+
                 <section class="members-table">
                     <h2>Mais mensagens esta semana</h2>
                     <ul>
@@ -189,7 +190,7 @@
                         {% endfor %}
                     </ul>
                 </section>
-                
+
                 <section class="members-table">
                     <h2>Aniversariantes</h2>
                     <ul>
@@ -203,9 +204,9 @@
                             </span>
                             <span class="stat">
                                 {% if member.data_nascimento %}
-                                    {{ member.data_nascimento|date:"d/m" }}
+                                {{ member.data_nascimento|date:"d/m" }}
                                 {% else %}
-                                    Aniversário
+                                Aniversário
                                 {% endif %}
                             </span>
                         </li>
@@ -214,9 +215,9 @@
                         {% endfor %}
                     </ul>
                 </section>
-                
+
                 <section class="members-table">
-                    <h2>Mais soluções</h2>
+                    <h2>Mais respostas</h2>
                     <ul>
                         {% for member in mais_solucoes %}
                         <li>
@@ -233,7 +234,7 @@
                         {% endfor %}
                     </ul>
                 </section>
-                
+
                 <section class="members-table">
                     <h2>Membros do staff</h2>
                     <ul>
@@ -252,7 +253,7 @@
                         {% endfor %}
                     </ul>
                 </section>
-                
+
                 <section class="members-table">
                     <h2>Moderadores</h2>
                     <ul>

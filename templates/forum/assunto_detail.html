@@ -124,18 +124,14 @@
                             <i class="fa fa-lock" title="Tópico fechado"></i>
                             {% endif %}
                         </h4>
-                        <div class="thread-meta">
-                            <span class="author">{{ item.autor.username }}</span>
-                            <span class="date">{{ item.criado_em|date:"d/m/Y H:i" }}</span>
-                            <span class="tipo">{{ item.get_tipo_display }}</span>
-                        </div>
+
                     </div>
                     <div class="subforum-stats subforum-column center">
                         <span>Respostas: {{ item.replies.count }} | Views: {{ item.visualizacoes }}</span>
                     </div>
                     <div class="subforum-info subforum-column">
                         <span class="last-post-date">{{ item.atualizado_em|date:"d/m/Y H:i" }}</span>
-                        <span class="last-post-author">por {{ item.autor.username }}</span>
+                        <span class="last-post-author">por <a href="{% url 'perfil' item.autor.username %}" class="user-name">{{ item.autor.username }}</a></span>
                     </div>
                 </div>
                 {% if not forloop.last %}

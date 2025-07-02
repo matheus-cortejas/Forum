@@ -39,7 +39,7 @@
                                 href="{% url 'post_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug post_id=latest.id %}">
                                 {{ latest.titulo }}
                             </a>
-                            por <span class="user-name">{{ latest.autor.username }}</span>
+                            por <a href="{% url 'perfil' latest.autor.username %}" class="user-name">{{ latest.autor.username }}</a>
                             <span class="post-time">{{ latest.criado_em|date:"d/m/Y" }}</span>
                         </span>
                         {% else %}
@@ -163,7 +163,7 @@
                 <div class="stat-item">
                     <span class="stat-label">Newest Member:</span>
                     {% if forum_stats.newest_member %}
-                    <a href="#" class="user-link">{{ forum_stats.newest_member.username }}</a>
+                    <a href="{% url 'perfil' forum_stats.newest_member.username %}" class="user-link">{{ forum_stats.newest_member.username }}</a>
                     {% else %}
                     <span class="user-link">N/A</span>
                     {% endif %}

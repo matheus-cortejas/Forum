@@ -378,11 +378,6 @@ def add_reply(request, categoria_slug, assunto_slug, postagem_id):
                     conteudo=conteudo
                 )
                 
-                # Atualizar contador de respostas do usuário
-                request.user.answers = (request.user.answers or 0) + 1
-                request.user.total_itens = (request.user.total_itens or 0) + 1
-                request.user.save(update_fields=['answers', 'total_itens'])
-                
                 messages.success(request, 'Resposta adicionada com sucesso!')
                 
                 # Se for requisição AJAX, retornar JSON
@@ -450,11 +445,6 @@ def delete_reply(request, reply_id):
     if reply.autor != request.user and not request.user.is_staff:
         return JsonResponse({'success': False, 'error': 'Sem permissão para deletar esta resposta'})
     
-    # Atualizar contadores do usuário
-    reply.autor.answers = max(0, (reply.autor.answers or 1) - 1)
-    reply.autor.total_itens = max(0, (reply.autor.total_itens or 1) - 1)
-    reply.autor.save(update_fields=['answers', 'total_itens'])
-    
     reply.delete()
     
     return JsonResponse({
@@ -494,9 +484,6 @@ def add_reaction_postagem(request, categoria_slug, assunto_slug, postagem_id):
                 existing_reaction.delete()
                 action = 'removed'
                 
-                # Diminuir reputação do autor da postagem
-                postagem.autor.reputacao = max(0, (postagem.autor.reputacao or 1) - 1)
-                postagem.autor.save(update_fields=['reputacao'])
             else:
                 # Alterar reação (não muda reputação)
                 existing_reaction.reacao = reacao
@@ -510,10 +497,6 @@ def add_reaction_postagem(request, categoria_slug, assunto_slug, postagem_id):
                 reacao=reacao
             )
             action = 'added'
-            
-            # Aumentar reputação do autor da postagem
-            postagem.autor.reputacao = (postagem.autor.reputacao or 0) + 1
-            postagem.autor.save(update_fields=['reputacao'])
         
         # CORRIGIR: Buscar reações com URLs corretas
         from django.db.models import Count
@@ -583,9 +566,6 @@ def add_reaction_reply(request, reply_id):
                 existing_reaction.delete()
                 action = 'removed'
                 
-                # Diminuir reputação do autor da reply
-                reply.autor.reputacao = max(0, (reply.autor.reputacao or 1) - 1)
-                reply.autor.save(update_fields=['reputacao'])
             else:
                 # Alterar reação (não muda reputação)
                 existing_reaction.reacao = reacao
@@ -600,10 +580,6 @@ def add_reaction_reply(request, reply_id):
             )
             action = 'added'
             
-            # Aumentar reputação do autor da reply
-            reply.autor.reputacao = (reply.autor.reputacao or 0) + 1
-            reply.autor.save(update_fields=['reputacao'])
-        
         # CORRIGIR: Buscar reações com URLs corretas
         from django.db.models import Count
         reacoes_query = ReacaoReply.objects.filter(reply=reply)\

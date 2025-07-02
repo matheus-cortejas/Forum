@@ -1,13 +1,13 @@
 from django.db.models import Count
 from posts.models import Postagem, Tag, TagEspecifica
 from django.contrib.auth import get_user_model
-from .models import UltimaAtividade, Pesquisa
+from .models import UltimaAtividade, Pesquisa, OnlineRecord
 
 def forum_stats(request):
     """Context processor para estatísticas do fórum"""
     User = get_user_model()
     
-    online_record = 8000
+    online_record = OnlineRecord.get_current()
 
     # Obter usuários online reais
     try:
@@ -52,6 +52,9 @@ def forum_stats(request):
             is_authenticated=False,
             is_bot=False
         ).count()
+
+        total_online = len(online_members) + online_guests
+        online_record = OnlineRecord.update_if_higher(total_online)        
         
     except ImportError:
         # Fallback para dados simulados se o modelo não existir
