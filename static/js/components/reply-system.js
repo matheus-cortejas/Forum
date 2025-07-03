@@ -71,7 +71,11 @@ class ReplySystem {
         // Validação
         const content = formData.get('conteudo').trim();
         if (content.length < 10) {
-            Notifications.show('A resposta deve ter pelo menos 10 caracteres.', 'error');
+            if (window.Notifications) {
+                Notifications.show('A resposta deve ter pelo menos 10 caracteres.', 'error');
+            } else {
+                alert('A resposta deve ter pelo menos 10 caracteres.');
+            }
             return;
         }
         
@@ -95,13 +99,26 @@ class ReplySystem {
                 this.addReplyToDOM(data.reply_html);
                 this.updateRepliesCount();
                 this.hide();
-                Notifications.show(data.message, 'success');
+                
+                if (window.Notifications) {
+                    Notifications.show(data.message, 'success');
+                } else {
+                    alert(data.message || 'Resposta adicionada com sucesso!');
+                }
             } else {
-                Notifications.show(data.error || 'Erro ao adicionar resposta', 'error');
+                if (window.Notifications) {
+                    Notifications.show(data.error || 'Erro ao adicionar resposta', 'error');
+                } else {
+                    alert(data.error || 'Erro ao adicionar resposta');
+                }
             }
         } catch (error) {
             console.error('Erro:', error);
-            Notifications.show('Erro de conexão', 'error');
+            if (window.Notifications) {
+                Notifications.show('Erro de conexão', 'error');
+            } else {
+                alert('Erro de conexão');
+            }
         } finally {
             submitBtn.classList.remove('loading');
             submitBtn.disabled = false;
@@ -136,32 +153,48 @@ class ReplySystem {
         console.log('Editar resposta:', replyId);
     }
 
-    async delete(replyId) {
+    async delete(replyId, categoriaSlug = null, assuntoSlug = null) {
         if (!confirm('Tem certeza que deseja deletar esta resposta?')) {
             return;
         }
 
         try {
-            const response = await fetch(`/posts/reply/${replyId}/delete/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': Utils.getCsrfToken(),
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                document.querySelector(`#reply-${replyId}`).remove();
-                this.updateRepliesCount();
-                Notifications.show(data.message, 'success');
-            } else {
-                Notifications.show(data.error, 'error');
+            // Se não foram passados os slugs, tentar extrair da URL
+            if (!categoriaSlug || !assuntoSlug) {
+                const pathParts = window.location.pathname.split('/').filter(part => part); // Remove partes vazias
+                // URL: /games/god-of-war/2/ -> ['games', 'god-of-war', '2']
+                categoriaSlug = pathParts[0]; // 'games'
+                assuntoSlug = pathParts[1];   // 'god-of-war'
             }
+
+            console.log('Debug - Categoria:', categoriaSlug, 'Assunto:', assuntoSlug, 'Reply ID:', replyId);
+
+            // Método usando formulário tradicional (mais confiável)
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/posts/reply/delete/${categoriaSlug}/${assuntoSlug}/${replyId}/`;
+            
+            // Adicionar CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+            
+            console.log('URL de deleção:', form.action);
+            
+            // Submeter formulário
+            document.body.appendChild(form);
+            form.submit();
+            
         } catch (error) {
             console.error('Erro:', error);
-            Notifications.show('Erro ao deletar resposta', 'error');
+            if (window.Notifications) {
+                Notifications.show('Erro ao deletar resposta', 'error');
+            } else {
+                alert('Erro ao deletar resposta');
+            }
         }
     }
 }

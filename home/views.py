@@ -249,6 +249,8 @@ def assunto_detail(request, categoria_slug, assunto_slug):
             data_fim,
             tipo_organizacao != 'recente'
         ]),
+        # Add user authentication status
+        'user_authenticated': request.user.is_authenticated,
     }
     
     return render(request, 'forum/assunto_detail.html', context)

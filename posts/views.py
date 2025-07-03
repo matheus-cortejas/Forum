@@ -1,9 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Q, Prefetch
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.utils.text import slugify
+from django.core.exceptions import PermissionDenied
+from django.db.models import F, Q, Prefetch
 from django.core.paginator import Paginator
 from itertools import chain
 from operator import attrgetter
@@ -13,11 +15,122 @@ from .models import (
     Reply, 
     ReacaoPostagem, 
     ReacaoReply,  
-    Reacao
+    Reacao,
+    TagEspecifica
 )
 
 from home.models import Assunto
 from core.context_processors import filtros_forum
+from .forms import PostagemForm, ReplyForm
+
+@login_required
+def criar_post(request, categoria_slug, assunto_slug):
+    assunto = get_object_or_404(Assunto, slug=assunto_slug)
+    
+    if request.method == 'POST':
+        form = PostagemForm(request.POST, request.FILES, request=request)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.autor = request.user
+            post.assunto = assunto
+            
+            # Gerar slug único
+            base_slug = slugify(post.titulo)
+            slug = base_slug
+            counter = 1
+            while Post.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            post.slug = slug
+            
+            # SALVAR O POST PRIMEIRO
+            post.save()
+            
+            # AGORA salvar as tags específicas (DEPOIS que o post já tem ID)
+            tags_especificas = form.cleaned_data.get('tags_especificas', '')
+            if tags_especificas:
+                tags_list = [tag.strip() for tag in tags_especificas.split(',') if tag.strip()]
+                for tag_nome in tags_list:
+                    # Criar/buscar tag sem associar a postagem específica
+                    tag, created = TagEspecifica.objects.get_or_create(
+                        nome=tag_nome,
+                        defaults={'nome': tag_nome}
+                    )
+                    # Adicionar a tag ao post usando many-to-many
+                    post.tags_especificas.add(tag)
+            
+            messages.success(request, f'{post.get_tipo_display()} criado com sucesso!')
+            
+            # Redirecionar para a view correta
+            return redirect('postagem_detail', 
+                          categoria_slug=categoria_slug, 
+                          assunto_slug=assunto_slug, 
+                          postagem_id=post.id)
+    else:
+        form = PostagemForm(request=request)
+    
+    context = {
+        'form': form,
+        'assunto': assunto,
+        'is_editing': False,
+    }
+    return render(request, 'posts/criar_editar_post.html', context)
+
+@login_required
+def editar_post(request, categoria_slug, assunto_slug, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    
+    # Verificar permissões
+    if post.autor != request.user and not request.user.is_staff:
+        raise PermissionDenied("Você não tem permissão para editar este post.")
+    
+    if request.method == 'POST':
+        form = PostagemForm(request.POST, request.FILES, instance=post, request=request)
+        if form.is_valid():
+            # Verificar se o título mudou para gerar novo slug
+            if form.cleaned_data['titulo'] != post.titulo:
+                base_slug = slugify(form.cleaned_data['titulo'])
+                slug = base_slug
+                counter = 1
+                while Post.objects.filter(slug=slug).exclude(id=post.id).exists():
+                    slug = f"{base_slug}-{counter}"
+                    counter += 1
+                form.instance.slug = slug
+            
+            # SALVAR O POST PRIMEIRO
+            post = form.save()
+            
+            # LIMPAR tags antigas e adicionar novas - CORREÇÃO AQUI
+            post.tags_especificas.set([])  # Use set([]) ao invés de clear()
+            tags_especificas = form.cleaned_data.get('tags_especificas', '')
+            if tags_especificas:
+                tags_list = [tag.strip() for tag in tags_especificas.split(',') if tag.strip()]
+                tags_to_add = []
+                for tag_nome in tags_list:
+                    tag, created = TagEspecifica.objects.get_or_create(nome=tag_nome)
+                    tags_to_add.append(tag)
+                # Adicionar todas as tags de uma vez
+                post.tags_especificas.add(*tags_to_add)
+            
+            messages.success(request, f'{post.get_tipo_display()} editado com sucesso!')
+            
+            # Redirecionar para a view correta
+            return redirect('postagem_detail', 
+                          categoria_slug=categoria_slug, 
+                          assunto_slug=assunto_slug, 
+                          postagem_id=post.id)
+    else:
+        # Preparar tags para o formulário
+        tags_iniciais = ', '.join([tag.nome for tag in post.tags_especificas.all()])
+        form = PostagemForm(instance=post, initial={'tags_especificas': tags_iniciais}, request=request)
+    
+    context = {
+        'form': form,
+        'post': post,
+        'assunto': post.assunto,
+        'is_editing': True,
+    }
+    return render(request, 'posts/criar_editar_post.html', context)
 
 def ultimas_atividades(request):
     """Feed de atividades recentes com narrativa"""
@@ -154,16 +267,17 @@ def recent_posts(request):
         'tipo': 'post'
     })
 
+# Views simplificadas para compatibilidade - TODAS usam o mesmo template
 def thread_detail(request, categoria_slug, assunto_slug, thread_id):
-    """Redireciona para a view genérica de postagem (thread)"""
+    """Redireciona para a view unificada de postagem"""
     return postagem_detail(request, categoria_slug, assunto_slug, thread_id)
 
 def post_detail(request, categoria_slug, assunto_slug, post_id):
-    """Redireciona para a view genérica de postagem (post)"""
+    """Redireciona para a view unificada de postagem"""
     return postagem_detail(request, categoria_slug, assunto_slug, post_id)
 
 def postagem_detail(request, categoria_slug, assunto_slug, postagem_id):
-    """View para exibir uma postagem (thread ou post) e suas respostas"""
+    """View unificada para exibir uma postagem (thread ou post) usando o template existente"""
     
     postagem = get_object_or_404(
         Post.objects.select_related('autor', 'assunto', 'tag_sistema'),
@@ -175,36 +289,24 @@ def postagem_detail(request, categoria_slug, assunto_slug, postagem_id):
     # Incrementa visualizações
     Post.objects.filter(id=postagem_id).update(visualizacoes=F('visualizacoes') + 1)
     
-    # Buscar replies com reações
+    # Buscar replies
     replies = Reply.objects.filter(postagem=postagem)\
         .select_related('autor')\
-        .prefetch_related('reacoes__reacao', 'reacoes__usuario')\
         .order_by('criado_em')
     
     # Buscar reações disponíveis
-    reacoes_disponiveis = Reacao.objects.filter(ativo=True).order_by('ordem')
-    
-    # Buscar reações da postagem
-    reacoes_postagem = postagem.get_reacoes_count()
-    user_reaction_postagem = postagem.get_user_reaction(request.user)
-    
-    # Buscar reações do usuário para cada reply
-    user_reactions_replies = {}
-    if request.user.is_authenticated:
-        for reply in replies:
-            user_reaction = reply.get_user_reaction(request.user)
-            if user_reaction:
-                user_reactions_replies[reply.id] = user_reaction
+    try:
+        reacoes_disponiveis = Reacao.objects.filter(ativo=True).order_by('ordem')
+    except:
+        reacoes_disponiveis = []
     
     context = {
         'postagem': postagem,
         'replies': replies,
         'reacoes_disponiveis': reacoes_disponiveis,
-        'reacoes_postagem': reacoes_postagem,
-        'user_reaction_postagem': user_reaction_postagem,
-        'user_reactions_replies': user_reactions_replies,
     }
     
+    # SEMPRE usar o template existente posts/detail.html
     return render(request, 'posts/detail.html', context)
 
 def threads(request):
@@ -350,107 +452,105 @@ def posts(request):
     })
 
 @login_required
-def add_reply(request, categoria_slug, assunto_slug, postagem_id):
-    """View para adicionar uma resposta a uma thread"""
+@require_POST
+def deletar_post(request, categoria_slug, assunto_slug, post_id):
+    post = get_object_or_404(Post, id=post_id)
     
-    # CORRIGIDO: usar postagem_id em vez de thread_id
-    postagem = get_object_or_404(
-        Post,
-        id=postagem_id,
-        assunto__slug=assunto_slug,
-        assunto__categoria__slug=categoria_slug
-    )
+    # Verificar permissões
+    if post.autor != request.user and not request.user.is_staff:
+        return JsonResponse({'success': False, 'error': 'Sem permissão'}, status=403)
+    
+    tipo = post.get_tipo_display()
+    post.delete()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True, 'message': f'{tipo} deletado com sucesso!'})
+    
+    messages.success(request, f'{tipo} deletado com sucesso!')
+    return redirect('assunto_detail', categoria_slug=categoria_slug, assunto_slug=assunto_slug)
+
+# Reply views - corrigir redirecionamentos
+@login_required
+def add_reply(request, categoria_slug, assunto_slug, postagem_id):
+    post = get_object_or_404(Post, id=postagem_id)
     
     if request.method == 'POST':
-        conteudo = request.POST.get('conteudo', '').strip()
-        
-        if not conteudo:
-            messages.error(request, 'O conteúdo da resposta não pode estar vazio.')
-        elif len(conteudo) < 10:
-            messages.error(request, 'A resposta deve ter pelo menos 10 caracteres.')
-        elif len(conteudo) > 10000:
-            messages.error(request, 'A resposta não pode ter mais de 10.000 caracteres.')
-        else:
-            try:
-                reply = Reply.objects.create(
-                    postagem=postagem,
-                    autor=request.user,
-                    conteudo=conteudo
-                )
-                
-                messages.success(request, 'Resposta adicionada com sucesso!')
-                
-                # Se for requisição AJAX, retornar JSON
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'success': True,
-                        'message': 'Resposta adicionada com sucesso!',
-                        'reply_id': reply.id,
-                        'reply_html': render_reply_html(reply, request.user)
-                    })
-                
-            except Exception as e:
-                messages.error(request, f'Erro ao salvar resposta: {str(e)}')
+        form = ReplyForm(request.POST)
+        if form.is_valid():
+            reply = form.save(commit=False)
+            reply.autor = request.user
+            reply.postagem = post
+            reply.save()
+            
+            messages.success(request, 'Resposta adicionada com sucesso!')
+            
+            # SEMPRE redirecionar para a view unificada
+            return redirect('postagem_detail', 
+                          categoria_slug=categoria_slug, 
+                          assunto_slug=assunto_slug, 
+                          postagem_id=post.id)
+    else:
+        form = ReplyForm()
     
-    return redirect('postagem_detail', 
-                   categoria_slug=categoria_slug,
-                   assunto_slug=assunto_slug,
-                   postagem_id=postagem_id)
-
-def render_reply_html(reply, current_user):
-    """Função auxiliar para renderizar HTML de uma resposta"""
-    from django.template.loader import render_to_string
-    
-    return render_to_string('posts/partials/reply_item.html', {
-        'reply': reply,
-        'user': current_user
-    })
+    context = {
+        'form': form,
+        'post': post,
+        'assunto': post.assunto,
+    }
+    return render(request, 'posts/add_reply.html', context)
 
 @login_required
-@require_POST
-def edit_reply(request, reply_id):
-    """View para editar uma resposta"""
-    
-    reply = get_object_or_404(Reply, id=reply_id, autor=request.user)
-    
-    conteudo = request.POST.get('conteudo', '').strip()
-    
-    if not conteudo:
-        return JsonResponse({'success': False, 'error': 'Conteúdo não pode estar vazio'})
-    
-    if len(conteudo) < 10:
-        return JsonResponse({'success': False, 'error': 'Resposta deve ter pelo menos 10 caracteres'})
-    
-    if len(conteudo) > 10000:
-        return JsonResponse({'success': False, 'error': 'Resposta não pode ter mais de 10.000 caracteres'})
-    
-    reply.conteudo = conteudo
-    reply.save()
-    
-    return JsonResponse({
-        'success': True,
-        'message': 'Resposta editada com sucesso!',
-        'conteudo': reply.conteudo,
-        'data_edicao': reply.atualizado_em.strftime('%d/%m/%Y %H:%M')
-    })
-
-@login_required
-@require_POST
-def delete_reply(request, reply_id):
-    """View para deletar uma resposta"""
-    
+def edit_reply(request, categoria_slug, assunto_slug, reply_id):
     reply = get_object_or_404(Reply, id=reply_id)
     
     # Verificar permissões
     if reply.autor != request.user and not request.user.is_staff:
-        return JsonResponse({'success': False, 'error': 'Sem permissão para deletar esta resposta'})
+        raise PermissionDenied("Você não tem permissão para editar esta resposta.")
     
+    if request.method == 'POST':
+        form = ReplyForm(request.POST, instance=reply)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Resposta editada com sucesso!')
+            
+            # SEMPRE redirecionar para a view unificada
+            return redirect('postagem_detail', 
+                          categoria_slug=categoria_slug, 
+                          assunto_slug=assunto_slug, 
+                          postagem_id=reply.postagem.id)
+    else:
+        form = ReplyForm(instance=reply)
+    
+    context = {
+        'form': form,
+        'reply': reply,
+        'post': reply.postagem,
+        'assunto': reply.postagem.assunto,
+    }
+    return render(request, 'posts/edit_reply.html', context)
+
+@login_required
+@require_POST
+def delete_reply(request, categoria_slug, assunto_slug, reply_id):
+    reply = get_object_or_404(Reply, id=reply_id)
+    
+    # Verificar permissões
+    if reply.autor != request.user and not request.user.is_staff:
+        return JsonResponse({'success': False, 'error': 'Sem permissão'}, status=403)
+    
+    post = reply.postagem
     reply.delete()
     
-    return JsonResponse({
-        'success': True,
-        'message': 'Resposta deletada com sucesso!'
-    })
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True, 'message': 'Resposta deletada com sucesso!'})
+    
+    messages.success(request, 'Resposta deletada com sucesso!')
+    
+    # SEMPRE redirecionar para a view unificada
+    return redirect('postagem_detail', 
+                  categoria_slug=categoria_slug, 
+                  assunto_slug=assunto_slug, 
+                  postagem_id=post.id)
 
 @login_required
 @require_POST

@@ -35,8 +35,7 @@
                         {% with latest=assunto.latest_post %}
                         {% if latest %}
                         <span>
-                            <a
-                                href="{% url 'post_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug post_id=latest.id %}">
+                            <a href="{% url 'postagem_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug postagem_id=latest.id %}">
                                 {{ latest.titulo }}
                             </a>
                             por <a href="{% url 'perfil' latest.autor.username %}" class="user-name">{{ latest.autor.username }}</a>
@@ -95,8 +94,7 @@
                 <ul class="trending-list">
                     {% for thread in trending_threads %}
                     <li>
-                        <a href="{% url 'thread_detail' categoria_slug=thread.assunto.categoria.slug assunto_slug=thread.assunto.slug thread_id=thread.id %}"
-                            class="trending-item">
+                        <a href="{% url 'postagem_detail' categoria_slug=thread.assunto.categoria.slug assunto_slug=thread.assunto.slug postagem_id=thread.id %}" class="trending-item">
                             <span class="trend-title">{{ thread.titulo }}</span>
                             <span class="trend-meta">
                                 by <span class="user-name">{{ thread.autor.username }}</span> •
@@ -124,8 +122,7 @@
                 <ul class="recent-posts">
                     {% for post in recent_posts %}
                     <li>
-                        <a href="{% url 'post_detail' categoria_slug=post.assunto.categoria.slug assunto_slug=post.assunto.slug post_id=post.id %}"
-                            class="post-item">
+                        <a href="{% url 'postagem_detail' categoria_slug=post.assunto.categoria.slug assunto_slug=post.assunto.slug postagem_id=post.id %}" class="post-item">
                             <span class="post-title">{{ post.titulo }}</span>
                             <span class="post-meta">by <span class="user-name">{{ post.autor.username }}</span></span>
                             <span class="post-time">{{ post.criado_em|timesince }} atrás</span>

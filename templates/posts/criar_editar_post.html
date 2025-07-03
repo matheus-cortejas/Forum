@@ -1,0 +1,272 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}
+{% if is_editing %}
+    Editando {{ post.get_tipo_display|title }}
+{% else %}
+    Criar Nova Postagem
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="forum-wrapper">
+    <div class="forum-main">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-text">
+                        <h1>
+                            {% if is_editing %}
+                                Editando {{ post.get_tipo_display|title }}
+                            {% else %}
+                                Criar Nova Postagem
+                            {% endif %}
+                        </h1>
+                        <p class="descricao">
+                            Em: <a href="{% url 'assunto_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug %}">
+                                {{ assunto.titulo }}
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulário -->
+            <div class="post-form-container">
+                <form method="post" enctype="multipart/form-data" id="postForm">
+                    {% csrf_token %}
+                    
+                    <!-- Tipo de Postagem -->
+                    <div class="form-group">
+                        <label for="{{ form.tipo.id_for_label }}" class="form-label">
+                            {{ form.tipo.label }}
+                        </label>
+                        {{ form.tipo }}
+                        <div class="form-help">
+                            <small class="text-muted">
+                                <strong>Thread:</strong> Inicia uma nova discussão<br>
+                                <strong>Post:</strong> Contribuição para discussões existentes
+                            </small>
+                        </div>
+                        {% if form.tipo.errors %}
+                            <div class="form-errors">
+                                {{ form.tipo.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Título -->
+                    <div class="form-group">
+                        <label for="{{ form.titulo.id_for_label }}" class="form-label">
+                            {{ form.titulo.label }} <span class="required">*</span>
+                        </label>
+                        {{ form.titulo }}
+                        {% if form.titulo.errors %}
+                            <div class="form-errors">
+                                {{ form.titulo.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tag do Sistema -->
+                    <div class="form-group">
+                        <label for="{{ form.tag_sistema.id_for_label }}" class="form-label">
+                            {{ form.tag_sistema.label }}
+                        </label>
+                        {{ form.tag_sistema }}
+                        <div class="form-help">
+                            <small class="text-muted">
+                                Prefixos oficiais para categorizar o conteúdo
+                            </small>
+                        </div>
+                        {% if form.tag_sistema.errors %}
+                            <div class="form-errors">
+                                {{ form.tag_sistema.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tags Específicas -->
+                    <div class="form-group">
+                        <label for="{{ form.tags_especificas.id_for_label }}" class="form-label">
+                            {{ form.tags_especificas.label }}
+                        </label>
+                        {{ form.tags_especificas }}
+                        <div class="form-help">
+                            <small class="text-muted">
+                                {{ form.tags_especificas.help_text }}
+                            </small>
+                        </div>
+                        {% if form.tags_especificas.errors %}
+                            <div class="form-errors">
+                                {{ form.tags_especificas.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Conteúdo -->
+                    <div class="form-group">
+                        <label for="{{ form.conteudo.id_for_label }}" class="form-label">
+                            {{ form.conteudo.label }} <span class="required">*</span>
+                        </label>
+                        {{ form.conteudo }}
+                        {% if form.conteudo.errors %}
+                            <div class="form-errors">
+                                {{ form.conteudo.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Fixar (apenas para staff e threads) -->
+                    {% if 'fixo' in form.fields %}
+                    <div class="form-group" id="fixo-group" style="display: none;">
+                        <div class="form-check">
+                            {{ form.fixo }}
+                            <label for="{{ form.fixo.id_for_label }}" class="form-check-label">
+                                {{ form.fixo.label }}
+                            </label>
+                        </div>
+                        <div class="form-help">
+                            <small class="text-muted">
+                                Threads fixas aparecem no topo da lista
+                            </small>
+                        </div>
+                        {% if form.fixo.errors %}
+                            <div class="form-errors">
+                                {{ form.fixo.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Botões -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            {% if is_editing %}
+                                Salvar Alterações
+                            {% else %}
+                                Criar Postagem
+                            {% endif %}
+                        </button>
+                        <a href="{% url 'assunto_detail' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug %}" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoSelect = document.getElementById('id_tipo');
+    const fixoGroup = document.getElementById('fixo-group');
+    
+    function toggleFixoField() {
+        if (tipoSelect && fixoGroup) {
+            if (tipoSelect.value === 'THREAD') {
+                fixoGroup.style.display = 'block';
+            } else {
+                fixoGroup.style.display = 'none';
+            }
+        }
+    }
+    
+    // Verificar estado inicial
+    toggleFixoField();
+    
+    // Escutar mudanças
+    if (tipoSelect) {
+        tipoSelect.addEventListener('change', toggleFixoField);
+    }
+});
+</script>
+
+<style>
+.post-form-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.required {
+    color: #e53935;
+}
+
+.form-control, .form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+}
+
+.form-help {
+    margin-top: 0.25rem;
+}
+
+.form-errors {
+    color: #e53935;
+    margin-top: 0.25rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+</style>
+{% endblock %}

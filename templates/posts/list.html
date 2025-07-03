@@ -48,8 +48,8 @@
                 {% endif %}
             </div>
             <div class="subjects">
-                <a href="{% url 'post_detail' obj.assunto.categoria.slug obj.assunto.slug obj.id %}">
-                    {% if tipo == 'post' %}{% endif %}{{ obj.titulo }}
+                <a href="{% url 'postagem_detail' obj.assunto.categoria.slug obj.assunto.slug obj.id %}">
+                    {{ obj.titulo }}
                 </a>
                 <br>
                 <span>

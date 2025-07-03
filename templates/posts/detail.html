@@ -131,10 +131,13 @@
                             <i class="fa fa-reply"></i> Responder
                         </button>
 
-                        {% if user == postagem.autor or user.is_staff %}
-                        <button onclick="Post.edit({{ postagem.id }})" class="btn btn-secondary">
-                            <i class="fa fa-edit"></i> Editar
-                        </button>
+                        {% if user.is_authenticated and postagem.autor == user or user.is_staff %}
+                        <div class="post-actions">
+                            <a href="{% url 'editar_post' categoria_slug=postagem.assunto.categoria.slug assunto_slug=postagem.assunto.slug post_id=postagem.id %}" 
+                               class="action-btn edit-btn" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
                         {% endif %}
                     </div>
                     {% else %}
@@ -221,6 +224,7 @@
 {% block extra_js %}
 <script src="{% static 'js/components/reactions.js' %}"></script>
 <script src="{% static 'js/pages/post-detail.js' %}"></script>
+<script src="{% static 'js/components/reply-system.js' %}"></script>
 <script>
     // Notificações específicas da página
     document.addEventListener('DOMContentLoaded', function() {

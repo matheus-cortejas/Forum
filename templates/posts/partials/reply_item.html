@@ -2,65 +2,61 @@
 {% load posts_extras %}
 
 <div class="reply-item" id="reply-{{ reply.id }}">
-    <div class="reply-author">
-        <div class="author-info">
+    <div class="reply-header">
+        <div class="reply-author">
             <div class="username">
-                <a href="{% url 'perfil' username=reply.autor.username %}">
+                <a href="{% url 'perfil' reply.autor.username %}">
                     {{ reply.autor.username }}
                 </a>
             </div>
             <div class="user-role">{{ reply.autor.apelido|default:"Membro" }}</div>
-        </div>
 
-        <div class="author-avatar">
             {% if reply.autor.avatar %}
-                <img src="{{ reply.autor.avatar.url }}" alt="Avatar" class="user-avatar">
+            <img src="{{ reply.autor.avatar.url }}" alt="Avatar" class="user-avatar">
             {% else %}
-                <img src="{% static 'images/default-avatar.png' %}" alt="Default Avatar" class="user-avatar">
+            <img src="{% static 'images/default-avatar.png' %}" alt="Default Avatar" class="user-avatar">
             {% endif %}
-        </div>
 
-        <div class="user-stats">
-            <div>Posts: <u>{{ reply.autor.posts_count|default:"0" }}</u></div>
-            <div>Respostas: <u>{{ reply.autor.answers|default:"0" }}</u></div>
-            <div>Reputação: <u>{{ reply.autor.reputacao|default:"0" }}</u></div>
-        </div>
-    </div>
-
-    <div class="reply-content-wrapper">
-        <div class="reply-content">
-            {{ reply.conteudo|linebreaks }}
-        </div>
-
-        <div class="reply-meta">
-            <span class="reply-date">{{ reply.criado_em|date:"d/m/Y H:i" }}</span>
-            {% if reply.atualizado_em != reply.criado_em %}
-                <span class="reply-edited">
-                    (Editado em {{ reply.atualizado_em|date:"d/m/Y H:i" }})
-                </span>
-            {% endif %}
-        </div>
-
-        <!-- Reações da resposta - SEMPRE VISÍVEL -->
-        <div class="reactions-container" data-type="reply" data-target-id="{{ reply.id }}">
-            <!-- Mostrar reações existentes -->
-            {% if reply.reacoes.all %}
-            <div class="reactions-summary">
-                {% regroup reply.reacoes.all by reacao as grouped_reactions %}
-                {% for reacao_group in grouped_reactions %}
-                <div class="reaction-summary-item">
-                    <img src="{{ reacao_group.grouper.icone.url }}" alt="{{ reacao_group.grouper.nome }}" class="reaction-icon-small">
-                    <span class="reaction-count-small">{{ reacao_group.list|length }}</span>
-                </div>
-                {% endfor %}
+            <div class="user-stats">
+                <div>Posts: <u>{{ reply.autor.posts_count|default:"0" }}</u></div>
+                <div>Respostas: <u>{{ reply.autor.answers|default:"0" }}</u></div>
+                <div>Reputação: <u>{{ reply.autor.reputacao|default:"0" }}</u></div>
             </div>
-            {% endif %}
-            
-            <!-- Controles de reação -->
-            {% if user.is_authenticated %}
-                <!-- Botão de reagir para usuários logados -->
-                <button class="reaction-btn{% if reply.reacoes.all %} has-reactions{% endif %}"
-                        data-reply-id="{{ reply.id }}">                
+        </div>
+        
+        <div class="reply-content">
+            <div class="reply-meta">
+                <span class="reply-date">{{ reply.criado_em|date:"d/m/Y H:i" }}</span>
+                {% if reply.atualizado_em != reply.criado_em %}
+                    <span class="reply-edited">
+                        (Editado em {{ reply.atualizado_em|date:"d/m/Y H:i" }})
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="post-content">
+                {{ reply.conteudo|linebreaks }}
+            </div>
+
+            <!-- Sistema de Reações da Reply -->
+            <div class="reactions-container" data-type="reply" data-target-id="{{ reply.id }}">
+                <!-- Mostrar reações existentes -->
+                {% if reply.reacoes.all %}
+                <div class="reactions-summary">
+                    {% regroup reply.reacoes.all by reacao as grouped_reactions %}
+                    {% for reacao_group in grouped_reactions %}
+                    <div class="reaction-summary-item">
+                        <img src="{{ reacao_group.grouper.icone.url }}" alt="{{ reacao_group.grouper.nome }}" class="reaction-icon-small">
+                        <span class="reaction-count-small">{{ reacao_group.list|length }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Controles de reação -->
+                {% if user.is_authenticated %}
+                <button class="reaction-btn{% if reply.reacoes.all %} has-reactions{% endif %}" 
+                        data-reply-id="{{ reply.id }}">
                     <i class="fa fa-smile-o"></i>
                     {% with total_reactions=reply.reacoes.all|length %}
                     <span class="reaction-count">
@@ -85,8 +81,8 @@
                         {% endfor %}
                     </div>
                 </div>
-            {% else %}
-                <!-- Para visitantes: mostrar informação sobre reações -->
+                {% else %}
+                <!-- Para visitantes: mostrar apenas informação -->
                 {% if reply.reacoes.all %}
                 <div class="reactions-guest-info">
                     <span class="guest-reaction-text">
@@ -103,21 +99,27 @@
                     </span>
                 </div>
                 {% endif %}
-            {% endif %}
-        </div>
+                {% endif %}
+            </div>
 
-        <!-- Ações da resposta -->
-        {% if user.is_authenticated and user == reply.autor or user.is_staff %}
-        <div class="reply-actions">
-            <button onclick="Reply.edit({{ reply.id }})" class="btn btn-sm btn-secondary">
-                <i class="fa fa-edit"></i> Editar
-            </button>
-            {% if user.is_staff %}
-            <button onclick="Reply.delete({{ reply.id }})" class="btn btn-sm btn-danger">
-                <i class="fa fa-trash"></i> Excluir
-            </button>
+            <!-- Ações da Reply -->
+            {% if user.is_authenticated and reply.autor == user or user.is_staff %}
+            <div class="actions">
+                <a href="{% url 'edit_reply' categoria_slug=reply.postagem.assunto.categoria.slug assunto_slug=reply.postagem.assunto.slug reply_id=reply.id %}" 
+                   class="btn btn-secondary">
+                    <i class="fa fa-edit"></i> Editar
+                </a>
+                
+                <form method="post" action="{% url 'delete_reply' categoria_slug=reply.postagem.assunto.categoria.slug assunto_slug=reply.postagem.assunto.slug reply_id=reply.id %}" 
+                      onsubmit="return confirm('Tem certeza que deseja deletar esta resposta?')" 
+                      style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fa fa-trash"></i> Deletar
+                    </button>
+                </form>
+            </div>
             {% endif %}
         </div>
-        {% endif %}
     </div>
 </div>

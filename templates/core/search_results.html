@@ -80,7 +80,7 @@
             </div>
             
             <div class="subjects">
-                <a href="{% if post.tipo == 'THREAD' %}{% url 'thread_detail' categoria_slug=post.assunto.categoria.slug assunto_slug=post.assunto.slug thread_id=post.id %}{% else %}{% url 'post_detail' categoria_slug=post.assunto.categoria.slug assunto_slug=post.assunto.slug post_id=post.id %}{% endif %}">
+                <a href="{% url 'postagem_detail' categoria_slug=post.assunto.categoria.slug assunto_slug=post.assunto.slug postagem_id=post.id %}">
                     {{ post.titulo }}
                 </a>
                 <br>

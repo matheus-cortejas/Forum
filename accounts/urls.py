@@ -10,7 +10,6 @@ urlpatterns = [
     
     # Perfil
     path('profile/<str:username>/', views.PerfilDetailView.as_view(), name='perfil'),  # Para outros usuários
-    path('profile/', views.profile, name='profile'),  # Para usuário logado
     path('perfil/editar/', views.EditarPerfilView.as_view(), name='editar_perfil'),
     path('seguir/<str:username>/', views.seguir_usuario, name='seguir_usuario'),
 

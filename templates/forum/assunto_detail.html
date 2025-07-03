@@ -7,8 +7,19 @@
         <div class="container">
             <!-- Header -->
             <div class="header">
-                <h1>{{ assunto.titulo }}</h1>
-                <p class="descricao">{{ assunto.descricao }}</p>
+                <div class="header-content">
+                    <div class="header-text">
+                        <h1>{{ assunto.titulo }}</h1>
+                        <p class="descricao">{{ assunto.descricao }}</p>
+                    </div>
+                    {% if user.is_authenticated %}
+                    <div class="header-actions">
+                        <a href="{% url 'criar_post' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug %}" class="btn btn-primary">
+                            <i class="fa fa-plus"></i> Criar Postagem
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
 
             <!-- Sistema de Filtros -->
@@ -124,6 +135,21 @@
                             <i class="fa fa-lock" title="Tópico fechado"></i>
                             {% endif %}
                         </h4>
+
+                        <!-- Ações do Post -->
+                        {% if user.is_authenticated and item.autor == user or user.is_staff %}
+                        <div class="post-actions">
+                            <a href="{% url 'editar_post' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug post_id=item.id %}" 
+                               class="action-btn edit-btn" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button class="action-btn delete-btn" 
+                                    onclick="confirmarDelecao({{ item.id }}, '{{ item.titulo|escapejs }}')" 
+                                    title="Deletar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        {% endif %}
 
                     </div>
                     <div class="subforum-stats subforum-column center">
@@ -270,4 +296,239 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de Confirmação de Deleção -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Deleção</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja deletar "<span id="deleteItemTitle"></span>"?</p>
+                <p class="text-muted">Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Deletar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let deletePostId = null;
+
+// Função para obter CSRF token de forma mais robusta
+function getCSRFToken() {
+    // Primeiro, tentar pegar do formulário
+    const tokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (tokenInput) {
+        return tokenInput.value;
+    }
+    
+    // Depois, tentar pegar da meta tag
+    const metaToken = document.querySelector('meta[name="csrf-token"]');
+    if (metaToken) {
+        return metaToken.getAttribute('content');
+    }
+    
+    // Por último, tentar pegar do cookie
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') {
+            return value;
+        }
+    }
+    
+    console.error('CSRF token não encontrado!');
+    return '';
+}
+
+function confirmarDelecao(postId, titulo) {
+    console.log('confirmarDelecao chamado:', postId, titulo); // Debug
+    deletePostId = postId;
+    
+    const titleElement = document.getElementById('deleteItemTitle');
+    if (titleElement) {
+        titleElement.textContent = titulo;
+    }
+    
+    // Verificar se Bootstrap Modal está disponível
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        const modalElement = document.getElementById('deleteConfirmModal');
+        if (modalElement) {
+            new bootstrap.Modal(modalElement).show();
+        }
+    } else {
+        // Fallback para confirm nativo
+        if (confirm(`Tem certeza que deseja deletar "${titulo}"?`)) {
+            deletarPost(postId);
+        }
+    }
+}
+
+function deletarPost(postId) {
+    console.log('deletarPost chamado:', postId); // Debug
+    const csrfToken = getCSRFToken();
+    
+    if (!csrfToken) {
+        alert('Erro: Token CSRF não encontrado');
+        return;
+    }
+    
+    const url = `{% url 'deletar_post' categoria_slug=assunto.categoria.slug assunto_slug=assunto.slug post_id=999999 %}`.replace('999999', postId);
+    
+    console.log('URL de deleção:', url); // Debug
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+    .then(response => {
+        console.log('Response status:', response.status); // Debug
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data); // Debug
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erro ao deletar: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao deletar post:', error);
+        alert('Erro ao deletar post. Verifique o console para mais detalhes.');
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('JavaScript da lista carregado!'); // Debug
+    
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            console.log('Botão confirmar clicado, deletePostId:', deletePostId); // Debug
+            if (deletePostId) {
+                deletarPost(deletePostId);
+                
+                // Fechar modal se Bootstrap estiver disponível
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    const modalElement = document.getElementById('deleteConfirmModal');
+                    if (modalElement) {
+                        const modal = bootstrap.Modal.getInstance(modalElement);
+                        if (modal) {
+                            modal.hide();
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        console.error('Botão de confirmação não encontrado');
+    }
+});
+</script>
+
+<style>
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.header-text {
+    flex: 1;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #545b62;
+    color: white;
+}
+
+.post-actions {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 3px;
+    transition: color 0.2s ease;
+    text-decoration: none;
+}
+
+.action-btn:hover {
+    color: #495057;
+    text-decoration: none;
+}
+
+.edit-btn:hover {
+    color: #007bff;
+}
+
+.delete-btn:hover {
+    color: #dc3545;
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .header-actions {
+        justify-content: center;
+    }
+}
+</style>
 {% endblock %}
