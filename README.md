@@ -81,11 +81,25 @@ Este é um projeto de fórum de discussão completo, construído com Django. Ele
 
 ## Estrutura do Projeto
 
--   `Forum/`: Configurações principais do projeto Django.
+-   `Forum/`: Configurações principais do projeto Django (`settings.py`, `urls.py`).
 -   `accounts/`: App para gerenciamento de usuários, perfis, autenticação e cargos.
--   `core/`: App para funcionalidades centrais, como o feed de atividades, estatísticas e o sistema de pesquisa.
+    -   `middleware.py`: Contém o middleware para rastrear usuários online.
+    -   `models.py`: Modelos `Usuario`, `CargoMembro`, `UsuarioOnline`, etc.
+-   `core/`: App para funcionalidades centrais e compartilhadas.
+    -   `models.py`: Modelos `UltimaAtividade`, `Pesquisa`.
+    -   `context_processors.py`: Fornece dados globais aos templates (ex: estatísticas, atividades recentes).
 -   `home/`: App responsável pela página inicial e listagem de categorias/assuntos.
--   `posts/`: App que gerencia postagens, tópicos, respostas, tags e reações.
--   `static/`: Contém todos os arquivos estáticos (CSS, JavaScript, imagens).
--   `templates/`: Contém os templates HTML do projeto.
--   `media/`: Diretório onde os uploads de usuários (como avatares) são armazenados.
+    -   `models.py`: Modelos `Categoria` e `Assunto`.
+-   `posts/`: App que gerencia o conteúdo principal do fórum.
+    -   `models.py`: Modelos `Postagem`, `Reply`, `Tag`, `Reacao`.
+    -   `forms.py`: Formulários para criação/edição de posts e respostas.
+    -   `views.py`: Lógica para criar, ler, atualizar e deletar posts e respostas.
+-   `static/`: Contém todos os arquivos estáticos.
+    -   `css/`: Arquivos CSS, organizados com uma estrutura similar a ITCSS.
+    -   `js/`: Arquivos JavaScript, divididos em componentes, páginas e libs.
+    -   `images/`: Imagens estáticas usadas na interface.
+-   `templates/`: Contém os templates HTML do projeto, organizados por app.
+    -   `accounts/`: Templates de login, registro, perfil.
+    -   `core/`: Template base (`base.html`) e includes (`navbar.html`, `footer.html`).
+    -   `posts/`: Templates para listagem e detalhe de posts, formulários, etc.
+-   `media/`: Diretório onde os uploads de usuários (como avatares e ícones de reação) são armazenados durante a execução.
