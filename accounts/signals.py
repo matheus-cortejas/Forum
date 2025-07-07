@@ -6,7 +6,6 @@ from django.db.models import F
 def atualizar_estatisticas_postagem(sender, instance, created, **kwargs):
     """Atualiza estatísticas quando uma postagem é criada"""
     if created:
-        # Usar F() expressions para evitar race conditions
         instance.autor.__class__.objects.filter(id=instance.autor.id).update(
             total_itens=F('total_itens') + 1,
             posts_count=F('posts_count') + 1

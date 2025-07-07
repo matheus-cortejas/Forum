@@ -45,14 +45,11 @@ class PostagemForm(forms.ModelForm):
         }
     
     def __init__(self, *args, **kwargs):
-        # Extract request from kwargs if provided
         self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
         
-        # Adicionar classe vazia como primeira opção para tag_sistema
         self.fields['tag_sistema'].empty_label = "Nenhuma tag do sistema"
         
-        # Se não for staff, remover campo fixo
         if self.request and not self.request.user.is_staff:
             if 'fixo' in self.fields:
                 del self.fields['fixo']
@@ -74,7 +71,6 @@ class PostagemForm(forms.ModelForm):
         tipo = cleaned_data.get('tipo')
         fixo = cleaned_data.get('fixo')
         
-        # Apenas threads podem ser fixas
         if fixo and tipo != 'THREAD':
             raise forms.ValidationError('Apenas threads podem ser fixadas.')
         

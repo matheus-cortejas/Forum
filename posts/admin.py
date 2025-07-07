@@ -67,7 +67,6 @@ class ReplyAdmin(admin.ModelAdmin):
     raw_id_fields = ('autor', 'postagem')
     date_hierarchy = 'criado_em'
 
-# REMOVER DUPLICAÇÃO - apenas um ReacaoReplyAdmin
 @admin.register(ReacaoReply)
 class ReacaoReplyAdmin(admin.ModelAdmin):
     list_display = ('reply', 'reacao', 'usuario', 'criado_em')

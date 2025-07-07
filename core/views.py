@@ -14,7 +14,7 @@ def search_view(request):
     elif search_type == 'postagens_membro':
         return search_member_posts_view(request)
     
-    # Extrair parâmetros do GET - aqui a mágica acontece!
+    # Extrair parâmetros do GET
     termo = request.GET.get('termo', '')
     apenas_titulo = request.GET.get('apenas_titulo') == 'on'
     autor = request.GET.get('autor', '')
@@ -30,12 +30,10 @@ def search_view(request):
     incluir_subforuns = request.GET.get('incluir_subforuns') == 'on'
     ordenacao = request.GET.get('ordenacao', 'relevance')
     
-    # Por padrão, não mostramos resultados se nenhum termo for fornecido
     resultados = []
     total_resultados = 0
     busca_realizada = False
     
-    # Se há um termo de pesquisa ou autor, realizamos a busca
     if termo or autor or subforum:
         busca_realizada = True
         resultados = search_posts(
@@ -59,7 +57,7 @@ def search_view(request):
         except (ValueError, TypeError):
             page = 1
             
-        paginator = Paginator(resultados, 20)  # 20 resultados por página
+        paginator = Paginator(resultados, 20) 
         resultados_paginados = paginator.get_page(page)
         resultados = resultados_paginados
     

@@ -46,7 +46,7 @@ class PerfilDetailView(DetailView):
             atividades_usuario = []
         
         # Seguidores com avatar
-        seguidores_com_avatar = usuario_perfil.seguidores.all()[:12]  # Máximo 12 para exibição
+        seguidores_com_avatar = usuario_perfil.seguidores.all()[:12] 
         
         # Adicionar contexto adicional
         context.update({
@@ -189,7 +189,6 @@ def members(request):
     tipo = request.GET.get('tipo')
     busca = request.GET.get('busca', '').strip()
     
-    # Se há busca, mostra a lista filtrada
     if busca:
         members = Usuario.objects.filter(
             Q(username__icontains=busca) | 
@@ -203,7 +202,6 @@ def members(request):
             'busca_termo': busca
         })
     
-    # Se há filtro específico, mostra a lista filtrada
     if tipo:
         return members_list(request)
     
@@ -491,7 +489,7 @@ def online(request):
         online_users = base_queryset.filter(is_authenticated=False, is_bot=False)
     elif tab == 'bots':
         online_users = base_queryset.filter(is_bot=True)
-    else:  # tab == 'all'
+    else: 
         online_users = base_queryset
     
     # Ordenar por última atividade
@@ -543,7 +541,6 @@ def get_user_action(path):
     if not path or path == '/':
         return "Visualizando a página inicial"
     
-    # Padrões específicos do fórum
     if '/posts/' in path:
         segments = path.strip('/').split('/')
         if len(segments) >= 4:
@@ -642,21 +639,6 @@ def profile(request):
         ultimas_respostas = []
         atividades = []
     
-    # Buscar últimos visitantes
-    ultimos_visitantes = usuario.visitas_recebidas.all()[:5] if hasattr(usuario, 'visitas_recebidas') else []
-    
-    context = {
-        'usuario': usuario,
-        'ultimas_postagens': ultimas_postagens,
-        'ultimas_respostas': ultimas_respostas,
-        'atividades': atividades,
-        'ultimos_visitantes': ultimos_visitantes,
-        'total_seguidores': usuario.get_total_seguidores() if hasattr(usuario, 'get_total_seguidores') else 0,
-        'data_cadastro': usuario.date_joined,
-        'ultimo_acesso': usuario.ultimo_acesso if hasattr(usuario, 'ultimo_acesso') else usuario.last_login,
-    }
-    
-    return render(request, 'accounts/profile.html', context)
     # Buscar últimos visitantes
     ultimos_visitantes = usuario.visitas_recebidas.all()[:5] if hasattr(usuario, 'visitas_recebidas') else []
     

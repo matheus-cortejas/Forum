@@ -53,7 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'accounts.middleware.OnlineUsersMiddleware',  # Middleware para rastrear usuários online
+    'accounts.middleware.OnlineUsersMiddleware',  
 ]
 
 ROOT_URLCONF = 'Forum.urls'

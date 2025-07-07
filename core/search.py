@@ -4,7 +4,7 @@ from posts.models import Postagem as Post
 from home.models import Categoria, Assunto
 from django.contrib.auth import get_user_model
 
-User = get_user_model()  # This will get accounts.Usuario
+User = get_user_model()  
 
 def search_posts(
     termo=None,
@@ -50,7 +50,7 @@ def search_posts(
                 keyword_query |= Q(titulo__icontains=keyword) | Q(conteudo__icontains=keyword)
         query = query.filter(keyword_query)
     
-    # Filtrar por autor (melhorado para pesquisa exata de membro)
+    # Filtrar por autor 
     if autor:
         # Pesquisa exata por username ou parcial
         query = query.filter(
@@ -79,7 +79,7 @@ def search_posts(
     if min_respostas and min_respostas > 0:
         query = query.filter(respostas_count__gte=min_respostas)
     
-    # Filtrar por prefixos (tags do sistema)
+    # Filtrar por prefixos
     if prefixos:
         prefixo_list = [p.strip() for p in prefixos.replace('[', '').replace(']', '').split(',')]
         if prefixo_list:
@@ -98,8 +98,6 @@ def search_posts(
     elif ordenacao == 'replies':
         query = query.order_by('-respostas_count')
     elif ordenacao == 'relevance':
-        # Ordenação por relevância pode ser customizada
-        # Por padrão, vamos ordenar por data
         query = query.order_by('-criado_em')
     
     return query.select_related('autor', 'assunto', 'assunto__categoria').annotate(
@@ -136,7 +134,7 @@ def search_users(
             Q(last_name__icontains=username)
         )
     
-    # Filtrar por email (cuidado com privacidade)
+    # Filtrar por email
     if email:
         query = query.filter(email__icontains=email)
     
@@ -157,7 +155,6 @@ def search_users(
     
     # Tentar diferentes nomes de relacionamento para contar posts
     try:
-        # Usar o related_name correto baseado no modelo Post
         query = query.annotate(posts_count=Count('postagem', distinct=True))
     except:
         try:
@@ -175,7 +172,7 @@ def search_users(
         query = query.order_by('-date_joined')
     elif ordenacao == 'posts_count':
         query = query.order_by('-posts_count')
-    else:  # username
+    else:  
         query = query.order_by('username')
     
     return query.select_related()
@@ -202,7 +199,6 @@ def search_member_posts(
     Retorna:
     - Tuple (queryset de posts filtrados, objeto usuário encontrado)
     """
-    # Primeiro, tentar encontrar o usuário
     membro_encontrado = None
     try:
         membro_encontrado = User.objects.get(
@@ -212,7 +208,6 @@ def search_member_posts(
     except User.DoesNotExist:
         return None, None
     except User.MultipleObjectsReturned:
-        # Se há múltiplos, pegar o que tem match exato primeiro
         membro_encontrado = User.objects.filter(username__iexact=username).first()
         if not membro_encontrado:
             membro_encontrado = User.objects.filter(username__icontains=username).first()
@@ -254,7 +249,7 @@ def search_member_posts(
         query = query.order_by('-respostas_count')
     elif ordenacao == 'views':
         query = query.order_by('-visualizacoes')
-    else:  # date
+    else:
         query = query.order_by('-criado_em')
     
     return query.select_related('autor', 'assunto', 'assunto__categoria'), membro_encontrado

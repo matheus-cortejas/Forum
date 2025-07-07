@@ -95,7 +95,7 @@ class UltimaAtividade(models.Model):
 class Pesquisa(models.Model):
     """Modelo para armazenar parâmetros de pesquisa"""
     usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL,  # This correctly references accounts.Usuario
+        settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE,
         related_name='pesquisas'
     )

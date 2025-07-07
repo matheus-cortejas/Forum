@@ -2,7 +2,6 @@ from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
 from datetime import timedelta
 from .models import UsuarioOnline
-import re
 import random
 
 class OnlineUsersMiddleware(MiddlewareMixin):
@@ -58,9 +57,8 @@ class OnlineUsersMiddleware(MiddlewareMixin):
         
         online_user.save()
         
-        # Cleanup periódico (apenas 1% das requisições para performance)
-        import random
-        if random.randint(1, 100) == 1:
+        # Cleanup periódico
+        if random.randint(1, 50) == 1:
             UsuarioOnline.cleanup_old_sessions()
     
     def get_client_ip(self, request):
@@ -102,52 +100,3 @@ class OnlineUsersMiddleware(MiddlewareMixin):
                     return True, bot_name.title()
         
         return False, ''
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
-        else:
-            ip = request.META.get('REMOTE_ADDR')
-        return ip
-    
-    def detect_bot(self, user_agent):
-        """Detectar se é um bot baseado no user agent"""
-        if not user_agent:
-            return False, ''
-        
-        user_agent_lower = user_agent.lower()
-        
-        for bot_name in self.BOT_USER_AGENTS:
-            if bot_name in user_agent_lower:
-                # Extrair nome específico do bot
-                if 'googlebot' in user_agent_lower:
-                    return True, 'Googlebot'
-                elif 'bingbot' in user_agent_lower:
-                    return True, 'Bingbot'
-                elif 'duckduckbot' in user_agent_lower:
-                    return True, 'DuckDuckBot'
-                elif 'facebookexternalhit' in user_agent_lower:
-                    return True, 'Facebook'
-                elif 'twitterbot' in user_agent_lower:
-                    return True, 'Twitter'
-                elif 'linkedinbot' in user_agent_lower:
-                    return True, 'LinkedIn'
-                elif 'telegrambot' in user_agent_lower:
-                    return True, 'Telegram'
-                elif 'discordbot' in user_agent_lower:
-                    return True, 'Discord'
-                else:
-                    return True, bot_name.title()
-        
-        return False, ''
-
-class CleanupOnlineUsersMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        # Durante desenvolvimento, pode ser mais agressivo (10% das requisições)
-        if random.randint(1, 10) == 1:
-            cutoff_time = timezone.now() - timedelta(minutes=30)
-            UsuarioOnline.objects.filter(ultima_atividade__lt=cutoff_time).delete()
-        
-        response = self.get_response(request)
-        return response

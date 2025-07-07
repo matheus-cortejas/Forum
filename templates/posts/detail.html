@@ -60,9 +60,9 @@
                         {% endif %}
                     </div>
 
-                    <!-- Sistema de Reações da Postagem - CORRIGIDO -->
+                    <!-- Sistema de Reações da Postagem -->
                     <div class="reactions-container" data-type="postagem" data-target-id="{{ postagem.id }}">
-                        <!-- Mostrar reações existentes - USANDO MESMO MÉTODO DAS RESPOSTAS -->
+                        <!-- Mostrar reações existentes -->
                         {% if postagem.reacoes.all %}
                         <div class="reactions-summary">
                             {% regroup postagem.reacoes.all by reacao as grouped_reactions %}

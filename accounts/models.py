@@ -156,13 +156,12 @@ class VisitaPerfil(models.Model):
     usuario_visitado = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='visitas_recebidas')
     visitante = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='visitas_realizadas')
     timestamp = models.DateTimeField(auto_now_add=True)
-    data = models.DateField(auto_now_add=True)  # Campo de data separado para unique_together
+    data = models.DateField(auto_now_add=True) 
     
     class Meta:
         verbose_name = "Visita de Perfil"
         verbose_name_plural = "Visitas de Perfil"
         ordering = ['-timestamp']
-        # Agora usando o campo 'data' em vez de timestamp__date
         unique_together = [['usuario_visitado', 'visitante', 'data']]
     
     @staticmethod

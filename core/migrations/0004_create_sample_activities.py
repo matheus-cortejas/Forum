@@ -36,7 +36,7 @@ def create_sample_activities(apps, schema_editor):
     ]
     
     for atividade_data in atividades_data:
-        if atividade_data['usuario']:
+        if atividade_data['usuario'] and atividade_data['postagem']:
             UltimaAtividade.objects.create(
                 tipo=atividade_data['tipo'],
                 usuario=atividade_data['usuario'],

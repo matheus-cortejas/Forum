@@ -42,10 +42,10 @@ class CargoMembroAdmin(admin.ModelAdmin):
 @admin.register(VisitaPerfil)
 class VisitaPerfilAdmin(admin.ModelAdmin):
     # Corrigido: usar os campos corretos do modelo
-    list_display = ['usuario_visitado', 'visitante', 'timestamp']  # Era 'data_visita'
-    list_filter = ['timestamp', 'data']  # Era 'data_visita'
+    list_display = ['usuario_visitado', 'visitante', 'timestamp'] 
+    list_filter = ['timestamp', 'data']  
     search_fields = ['usuario_visitado__username', 'visitante__username']
-    ordering = ['-timestamp']  # Era 'data_visita'
+    ordering = ['-timestamp'] 
 
 @admin.register(UsuarioOnline)
 class UsuarioOnlineAdmin(admin.ModelAdmin):

@@ -10,23 +10,22 @@ def create_sample_posts(apps, schema_editor):
     Usuario = apps.get_model('accounts', 'Usuario')
     Assunto = apps.get_model('home', 'Assunto')
     
-    # Buscar usuários e assuntos criados
+    # Buscar usuários criados
     try:
         admin = Usuario.objects.get(username='admin')
         gamer = Usuario.objects.get(username='gamer_pro')
         tech = Usuario.objects.get(username='tech_enthusiast')
         newbie = Usuario.objects.get(username='newbie_user')
     except Usuario.DoesNotExist:
-        # Se os usuários não existem, não criar posts
         return
     
+    # Buscar assuntos criados
     try:
         assunto_gow = Assunto.objects.get(titulo='God of War')
         assunto_programming = Assunto.objects.get(titulo='Programming')
         assunto_general = Assunto.objects.get(titulo='General Gaming')
         assunto_help = Assunto.objects.get(titulo='Help & Support')
     except Assunto.DoesNotExist:
-        # Se os assuntos não existem, não criar posts
         return
     
     # Buscar tags do sistema
@@ -223,7 +222,7 @@ def remove_sample_posts(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('posts', '0008_create_sample_reactions'),
+        ('posts', '0007_reacaoreply'),
         ('accounts', '0006_create_sample_users'),
         ('home', '0002_create_sample_categories'),
     ]

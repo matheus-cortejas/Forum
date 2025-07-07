@@ -66,7 +66,6 @@ def atualizar_thread_count_assunto(sender, instance, created, **kwargs):
     """Atualiza contador de threads no assunto"""
     if created and instance.tipo == 'THREAD':
         try:
-            # Atualizar contador de threads no assunto
             from django.db.models import F
             instance.assunto.__class__.objects.filter(
                 id=instance.assunto.id

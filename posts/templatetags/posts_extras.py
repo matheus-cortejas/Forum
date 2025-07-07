@@ -12,7 +12,6 @@ def get_item(dictionary, key):
         return None
     
     try:
-        # Converter key para int se necessário (IDs são integers)
         if isinstance(key, str) and key.isdigit():
             key = int(key)
         elif hasattr(key, 'id'):

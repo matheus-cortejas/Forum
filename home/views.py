@@ -29,22 +29,20 @@ def assunto_detail(request, categoria_slug, assunto_slug):
     # Query base para threads e posts
     queryset = Post.objects.filter(assunto=assunto)
     
-    # ===== APLICAR FILTROS =====
-    
-    # 1. Filtro por tipo (thread/post/todos)
+    # Filtro por tipo
     if tipo_filtro == 'thread':
         queryset = queryset.filter(tipo='THREAD')
     elif tipo_filtro == 'post':
         queryset = queryset.filter(tipo='POST')
     
-    # 2. Filtro por prefixo (tag do sistema)
+    # Filtro por prefixo
     if prefixo:
         queryset = queryset.filter(
             Q(tag_sistema__slug=prefixo) | 
             Q(tag_sistema__nome__icontains=prefixo)
         )
     
-    # 3. Filtro por tags de usuário
+    # Filtro por tags de usuário
     if tags_usuario:
         tags_list = [tag.strip() for tag in tags_usuario.split(',') if tag.strip()]
         if tags_list:
@@ -54,7 +52,7 @@ def assunto_detail(request, categoria_slug, assunto_slug):
                 tag_queries |= Q(tags_especificas__nome__icontains=tag)
             queryset = queryset.filter(tag_queries).distinct()
     
-    # 4. Filtro por autor - CORRIGIDO para múltiplos usuários
+    # Filtro por autor 
     if iniciada_por:
         queryset = queryset.filter(
             Q(autor__username__icontains=iniciada_por) |
@@ -62,7 +60,7 @@ def assunto_detail(request, categoria_slug, assunto_slug):
             Q(autor__last_name__icontains=iniciada_por)
         ).distinct()
     
-    # 5. Filtro por data de início
+    # Filtro por data de início
     if data_inicio:
         try:
             data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d')
@@ -70,15 +68,13 @@ def assunto_detail(request, categoria_slug, assunto_slug):
         except ValueError:
             pass
     
-    # 6. Filtro por data de fim
+    # Filtro por data de fim
     if data_fim:
         try:
             data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d')
             queryset = queryset.filter(criado_em__date__lte=data_fim_obj.date())
         except ValueError:
             pass
-    
-    # ===== OTIMIZAÇÕES DE QUERY =====
     
     # Aplicar select_related e prefetch_related ANTES da ordenação
     queryset = queryset.select_related(
@@ -94,8 +90,6 @@ def assunto_detail(request, categoria_slug, assunto_slug):
         )
     )
     
-    # ===== ORDENAÇÃO =====
-    
     if tipo_organizacao == 'antigo':
         queryset = queryset.order_by('criado_em')
     elif tipo_organizacao == 'visualizacoes':
@@ -110,21 +104,17 @@ def assunto_detail(request, categoria_slug, assunto_slug):
         ).order_by('-ultima_atividade', '-criado_em')
     elif tipo_organizacao == 'autor':
         queryset = queryset.order_by('autor__username', '-criado_em')
-    else:  # 'recente' (padrão)
+    else: 
         queryset = queryset.order_by('-criado_em')
-    
-    # ===== SEPARAR THREADS FIXAS =====
     
     threads_fixas = []
     if tipo_filtro in ['all', 'thread']:
-        # Threads fixas com os mesmos filtros aplicados
         threads_fixas_query = Post.objects.filter(
             assunto=assunto,
             tipo='THREAD',
             fixo=True
         )
         
-        # Aplicar os mesmos filtros às threads fixas
         if prefixo:
             threads_fixas_query = threads_fixas_query.filter(
                 Q(tag_sistema__slug=prefixo) | 
@@ -163,11 +153,8 @@ def assunto_detail(request, categoria_slug, assunto_slug):
         threads_fixas = threads_fixas_query.select_related(
             'autor', 'tag_sistema'
         ).prefetch_related('tags_especificas').order_by('-criado_em')
-        
-        # Remover threads fixas da query principal para evitar duplicação
+
         queryset = queryset.exclude(tipo='THREAD', fixo=True)
-    
-    # ===== PAGINAÇÃO =====
     
     paginator = Paginator(queryset, 20)
     total_resultados = paginator.count + len(threads_fixas)
@@ -176,8 +163,6 @@ def assunto_detail(request, categoria_slug, assunto_slug):
         postagens = paginator.page(page)
     except:
         postagens = paginator.page(1)
-    
-    # ===== CONSTRUIR URL DE FILTROS =====
     
     filtros_url = []
     if tipo_filtro != 'all':
@@ -197,29 +182,26 @@ def assunto_detail(request, categoria_slug, assunto_slug):
     
     filtros_query_string = '&'.join(filtros_url)
     
-    # ===== DADOS PARA SIDEBAR (CORRIGIDOS) =====
-    
     # Últimos posts
     ultimos_posts = Post.objects.filter(
         assunto=assunto,
         tipo='POST'
     ).select_related('autor', 'tag_sistema').order_by('-criado_em')[:10]
     
-    # Tags mais usadas no assunto - CORRIGIDO
+    # Tags mais usadas no assunto 
     tags_populares = TagEspecifica.objects.filter(
         postagem__assunto=assunto
     ).annotate(
         uso_count=Count('postagem')
     ).order_by('-uso_count')[:10]
     
-    # Autores mais ativos no assunto - CORRIGIDO
+    # Autores mais ativos no assunto
     autores_ativos = User.objects.filter(
         postagem__assunto=assunto
     ).annotate(
-        total_posts_assunto=Count('postagem')  # Mudado de 'posts_count' para 'total_posts_assunto'
+        total_posts_assunto=Count('postagem')  
     ).order_by('-total_posts_assunto')[:5]
     
-    # ===== CONTEXT =====
     
     context = {
         'assunto': assunto,
@@ -249,7 +231,6 @@ def assunto_detail(request, categoria_slug, assunto_slug):
             data_fim,
             tipo_organizacao != 'recente'
         ]),
-        # Add user authentication status
         'user_authenticated': request.user.is_authenticated,
     }
     

@@ -29,11 +29,11 @@ urlpatterns = [
     path('reply/edit/<slug:categoria_slug>/<slug:assunto_slug>/<int:reply_id>/', views.edit_reply, name='edit_reply'),
     path('reply/delete/<slug:categoria_slug>/<slug:assunto_slug>/<int:reply_id>/', views.delete_reply, name='delete_reply'),
     
-    # View unificada para posts e threads (usar sempre esta)
+    # View unificada para posts e threads
     path('<slug:categoria_slug>/<slug:assunto_slug>/<int:postagem_id>/', 
          views.postagem_detail, name='postagem_detail'),
     
-    # URLs de compatibilidade (redirecionam para a view unificada)
+    # URLs de compatibilidade
     path('<slug:categoria_slug>/<slug:assunto_slug>/thread/<int:thread_id>/', 
          views.thread_detail, name='thread_detail'),
     path('<slug:categoria_slug>/<slug:assunto_slug>/post/<int:post_id>/', 

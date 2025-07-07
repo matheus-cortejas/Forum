@@ -43,10 +43,10 @@ def criar_post(request, categoria_slug, assunto_slug):
                 counter += 1
             post.slug = slug
             
-            # SALVAR O POST PRIMEIRO
+            # Salvar
             post.save()
             
-            # AGORA salvar as tags específicas (DEPOIS que o post já tem ID)
+            # Salvar as tags específicas 
             tags_especificas = form.cleaned_data.get('tags_especificas', '')
             if tags_especificas:
                 tags_list = [tag.strip() for tag in tags_especificas.split(',') if tag.strip()]
@@ -97,11 +97,11 @@ def editar_post(request, categoria_slug, assunto_slug, post_id):
                     counter += 1
                 form.instance.slug = slug
             
-            # SALVAR O POST PRIMEIRO
+            # Salvar
             post = form.save()
             
-            # LIMPAR tags antigas e adicionar novas - CORREÇÃO AQUI
-            post.tags_especificas.set([])  # Use set([]) ao invés de clear()
+            # Limpar tags antigas e adicionar novas
+            post.tags_especificas.set([])
             tags_especificas = form.cleaned_data.get('tags_especificas', '')
             if tags_especificas:
                 tags_list = [tag.strip() for tag in tags_especificas.split(',') if tag.strip()]
@@ -267,7 +267,7 @@ def recent_posts(request):
         'tipo': 'post'
     })
 
-# Views simplificadas para compatibilidade - TODAS usam o mesmo template
+# Views simplificadas para compatibilidade
 def thread_detail(request, categoria_slug, assunto_slug, thread_id):
     """Redireciona para a view unificada de postagem"""
     return postagem_detail(request, categoria_slug, assunto_slug, thread_id)
@@ -306,7 +306,6 @@ def postagem_detail(request, categoria_slug, assunto_slug, postagem_id):
         'reacoes_disponiveis': reacoes_disponiveis,
     }
     
-    # SEMPRE usar o template existente posts/detail.html
     return render(request, 'posts/detail.html', context)
 
 def threads(request):
@@ -469,7 +468,6 @@ def deletar_post(request, categoria_slug, assunto_slug, post_id):
     messages.success(request, f'{tipo} deletado com sucesso!')
     return redirect('assunto_detail', categoria_slug=categoria_slug, assunto_slug=assunto_slug)
 
-# Reply views - corrigir redirecionamentos
 @login_required
 def add_reply(request, categoria_slug, assunto_slug, postagem_id):
     post = get_object_or_404(Post, id=postagem_id)
@@ -484,7 +482,6 @@ def add_reply(request, categoria_slug, assunto_slug, postagem_id):
             
             messages.success(request, 'Resposta adicionada com sucesso!')
             
-            # SEMPRE redirecionar para a view unificada
             return redirect('postagem_detail', 
                           categoria_slug=categoria_slug, 
                           assunto_slug=assunto_slug, 
@@ -513,7 +510,6 @@ def edit_reply(request, categoria_slug, assunto_slug, reply_id):
             form.save()
             messages.success(request, 'Resposta editada com sucesso!')
             
-            # SEMPRE redirecionar para a view unificada
             return redirect('postagem_detail', 
                           categoria_slug=categoria_slug, 
                           assunto_slug=assunto_slug, 
@@ -546,7 +542,6 @@ def delete_reply(request, categoria_slug, assunto_slug, reply_id):
     
     messages.success(request, 'Resposta deletada com sucesso!')
     
-    # SEMPRE redirecionar para a view unificada
     return redirect('postagem_detail', 
                   categoria_slug=categoria_slug, 
                   assunto_slug=assunto_slug, 
@@ -585,7 +580,7 @@ def add_reaction_postagem(request, categoria_slug, assunto_slug, postagem_id):
                 action = 'removed'
                 
             else:
-                # Alterar reação (não muda reputação)
+                # Alterar reação
                 existing_reaction.reacao = reacao
                 existing_reaction.save()
                 action = 'changed'
@@ -598,7 +593,7 @@ def add_reaction_postagem(request, categoria_slug, assunto_slug, postagem_id):
             )
             action = 'added'
         
-        # CORRIGIR: Buscar reações com URLs corretas
+        # Buscar reações com URLs corretas
         from django.db.models import Count
         reacoes_query = ReacaoPostagem.objects.filter(postagem=postagem)\
             .select_related('reacao')\
@@ -639,7 +634,6 @@ def add_reaction_postagem(request, categoria_slug, assunto_slug, postagem_id):
         print(traceback.format_exc())
         return JsonResponse({'success': False, 'error': str(e)})
 
-
 @login_required
 @require_POST
 def add_reaction_reply(request, reply_id):
@@ -667,7 +661,7 @@ def add_reaction_reply(request, reply_id):
                 action = 'removed'
                 
             else:
-                # Alterar reação (não muda reputação)
+                # Alterar reação
                 existing_reaction.reacao = reacao
                 existing_reaction.save()
                 action = 'changed'
@@ -680,7 +674,7 @@ def add_reaction_reply(request, reply_id):
             )
             action = 'added'
             
-        # CORRIGIR: Buscar reações com URLs corretas
+        # Buscar reações com URLs corretas
         from django.db.models import Count
         reacoes_query = ReacaoReply.objects.filter(reply=reply)\
             .select_related('reacao')\

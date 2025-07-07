@@ -82,8 +82,8 @@ class Postagem(models.Model):
         Tag, 
         on_delete=models.PROTECT, 
         limit_choices_to={'is_sistema': True},
-        null=True,  # Add this temporarily
-        blank=True  # Add this temporarily
+        null=True, 
+        blank=True  
     )
     fixo = models.BooleanField(default=False)
     fechado = models.BooleanField(default=False)
