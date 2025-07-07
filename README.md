@@ -1,6 +1,3 @@
-# Forum
-Django Discussion forum inspired at Invision Style but with the "modern face"
-
 ## Visão Geral
 
 Este é um projeto de fórum de discussão completo, construído com Django. Ele foi projetado para ser uma plataforma moderna, rica em recursos e interativa para comunidades online. A inspiração visual vem de plataformas como Invision Community, mas com uma abordagem de design e funcionalidades atualizadas.
@@ -14,8 +11,7 @@ Este é um projeto de fórum de discussão completo, construído com Django. Ele
 - **Perfis de Usuário**: Perfis detalhados com avatar, biografia, estatísticas (posts, reputação), e a habilidade de seguir outros usuários.
 - **Feed de Atividades Recentes**: Uma página dedicada que mostra as últimas atividades no fórum, como novos tópicos, respostas e reações, com opções de filtro.
 - **Filtros Avançados**: Poderoso sistema de filtros para tópicos e posts, permitindo buscas por prefixo, tags, autor, e data.
-- **Usuários Online**: Widget e página que mostram quem está online (membros, visitantes e bots).
-- **Notificações Visuais**: Notificações em tempo real (toast) para novas atividades e interações.
+- **Usuários Online**: Página que mostra quem está online (membros, visitantes e bots).
 - **Design Responsivo**: Interface adaptada para funcionar em desktops, tablets e dispositivos móveis.
 - **Transições de Página Suaves**: Efeitos de carregamento para uma experiência de usuário mais fluida.
 
